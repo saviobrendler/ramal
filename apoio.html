@@ -27,6 +27,9 @@
     .price small { font-size: 15px; font-weight: 600; color: var(--muted); }
     .note { font-size: 13px; color: var(--muted); }
     .toast-msg { margin-top: 10px; font-weight: 650; color: var(--ok); min-height: 20px; }
+    .wa-proof { margin-top: 16px; padding: 14px; border-radius: 16px; background: var(--surface-2); display: grid; gap: 10px; }
+    .wa-proof p { margin: 0; }
+    .wa-btn { background: #25d366 !important; color: #fff !important; justify-content: center; }
   </style>
 </head>
 <body>
@@ -54,6 +57,11 @@
       </div>
       <p class="toast-msg" id="msg" role="status" aria-live="polite"></p>
 
+      <div class="wa-proof">
+        <p><b>Depois de pagar, envie o comprovante pelo WhatsApp</b> <span class="note">(21) 97649-7605</span></p>
+        <a class="btn wa-btn" id="wa-proof" href="https://wa.me/5521976497605?text=Oi!%20Paguei%20o%20apoio%20do%20Ramal.%20Segue%20o%20comprovante." target="_blank" rel="noopener">Enviar comprovante no WhatsApp</a>
+      </div>
+
       <p class="note" style="margin-top:14px">Código "copia e cola":</p>
       <div class="code-box" id="code"></div>
       <p class="note" style="margin-top:14px">Chave Pix (aleatória):</p>
@@ -66,8 +74,8 @@
       <p>Assinatura mensal para desbloquear o <b>mapa ao vivo</b>, com os trens se deslocando e a sua posição, e para apoiar o projeto.</p>
       <ol>
         <li>Pague R$ 5 com o Pix acima.</li>
-        <li>Envie o comprovante para o contato indicado na <a href="privacidade.html">política de privacidade</a>.</li>
-        <li>Você recebe um código de 30 dias e o digita no app, em Mapa ao vivo.</li>
+        <li>Envie o comprovante pelo <a href="https://wa.me/5521976497605" target="_blank" rel="noopener">WhatsApp (21) 97649-7605</a>.</li>
+        <li>Depois da confirmação, você recebe pelo WhatsApp um código de 30 dias e o digita no app, em Mapa ao vivo.</li>
       </ol>
       <p class="note" style="margin-top:12px">A ativação é feita manualmente após conferir o pagamento. O app não confirma Pix sozinho, e a renovação é mensal, por sua conta. O conteúdo do mapa é dado público, e o Premium é uma contribuição de apoio, não uma compra de dados.</p>
     </section>

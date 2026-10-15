@@ -402,7 +402,7 @@ function renderInicio() {
 
     <a class="map-teaser" href="#/mapa">
       <span class="map-teaser-ico">${ICON.pin}</span>
-      <span><b>Mapa ao vivo</b><small>Veja os trens se deslocando e onde você está</small></span>
+      <span><b>Mapa ao vivo <em class="pbadge">Premium</em></b><small>Veja os trens se deslocando e onde você está</small></span>
       ${ICON.chev}
     </a>
 
@@ -411,7 +411,12 @@ function renderInicio() {
       <div class="chips-scroll">${LINES.map(l => `<a class="lchip" href="#/linha/${l.id}" style="--c:${l.color}"><i></i>${esc(l.name)}</a>`).join('')}</div>
     </section>`;
 
-  $('#go-rota', el).onclick = () => go('#/rota');
+  $('#go-rota', el).onclick = () => {
+    // Já abre a escolha de destino, com a sua estação atual como ponto de partida.
+    if (!state.plan.from) { state.plan.from = state.station; store.set('from', state.station); }
+    go('#/rota');
+    setTimeout(() => { if (parseHash().seg === 'rota' && !state.plan.to) openPicker('Para onde você vai?', n => setOD('to', n)); }, 80);
+  };
   $('#home-pick', el).onclick = () => openPicker('Sua estação', n => { state.station = n; store.set('station', n); remember(n); renderInicio(); });
   $('#home-fav', el).onclick = () => toggleFav(st);
 }
@@ -438,7 +443,7 @@ function nextRow(it, m, st, dt) {
     <span class="next-bar"></span>
     <span class="next-main">${badge(it.g.line)}<span class="next-dest">para <b>${esc(it.g.dest)}</b></span></span>
     <span class="next-when" data-eta-when="${it.eta}"><span class="when-slot">${etaWhen(it.eta, m)}</span>${it.trip.delay ? `<span class="late-sm">+${it.trip.delay} min</span>` : ''}</span>
-    ${crowd ? `<span class="next-crowd ${crowd.cls}" title="Lotação prevista">${meter(crowd.level)}</span>` : ''}
+    ${crowd ? `<span class="next-crowd ${crowd.cls}" title="${crowd.label}: com base em relatos de passageiros">${meter(crowd.level)}</span>` : ''}
   </li>`;
 }
 
@@ -614,7 +619,7 @@ function timeline(r) {
     const crowd = crowdForecast(l.trip.line.id, l.trip.dir, l.dep, l.from);
     const car = bestCar(l.to, l.trip.line.id, l.trip.dir, last ? 'saida' : 'baldeacao');
     const carHint = car && !car.weak
-      ? `<span class="car-hint">${cars(car.zone)}Embarque no vagão do <b>${ZONE[car.zone].toLowerCase()}</b> para ${last ? 'sair mais rápido' : 'agilizar a baldeação'}</span>` : '';
+      ? `<span class="car-hint">${cars(car.zone)}Entre no vagão do <b>${ZONE[car.zone].toLowerCase()}</b> ${last ? 'para sair perto da saída' : 'para trocar de trem mais rápido'}</span>` : '';
     html += `<li class="ride" style="--c:${c}"><span></span><span class="rail"></span>
       <div class="what">${badge(l.trip.line)} ${l.count} ${l.count === 1 ? 'estação' : 'estações'} · ${dur(l.arr - l.dep)}${crowd ? crowdChip(crowd) : ''}${carHint}</div></li>`;
     html += `<li class="stop ${last ? 'last' : ''}" style="--c:${c}"><time>${fmt(l.arr)}</time><span class="rail"></span>
@@ -716,7 +721,7 @@ function renderEstacao() {
   const st = state.station;
   const now = spNow(), m = minutesOf(now), dt = dayTypeOf(now);
   const fav = state.favs.includes(st);
-  const tabs = [['proximos', 'Próximos'], ['horarios', 'Horários'], ['servicos', 'Serviços e relatos']];
+  const tabs = [['proximos', 'Próximos trens'], ['horarios', 'Horários'], ['servicos', 'Serviços']];
   el.innerHTML = `
     <a class="back" href="#/">${ICON.back}Início</a>
     <div class="st-head">
@@ -727,17 +732,23 @@ function renderEstacao() {
       <button class="icon-btn" id="st-fav" type="button" aria-pressed="${fav}" aria-label="${fav ? 'Remover dos favoritos' : 'Salvar como favorita'}">${ICON.star}</button>
     </div>
     <div class="subtabs" role="tablist">${tabs.map(([id, t]) => `<button type="button" role="tab" data-stab="${id}" aria-selected="${state.stTab === id}">${t}</button>`).join('')}</div>
-    <div id="st-body"></div>
-    <div class="bottom-action"><button class="btn primary-btn" id="st-report" type="button">${ICON.megaphone}Relatar trem aqui</button></div>`;
+    <div id="st-body"></div>`;
 
   $$('[data-stab]', el).forEach(b => b.onclick = () => { state.stTab = b.dataset.stab; renderEstacao(); });
   $('#st-fav', el).onclick = () => toggleFav(st);
-  $('#st-report', el).onclick = () => openReportPicker(st);
 
   const body = $('#st-body', el);
-  if (state.stTab === 'proximos') body.innerHTML = proximosHtml(st, m, dt);
+  if (state.stTab === 'proximos') { body.innerHTML = proximosHtml(st, m, dt) + `<button class="report-wide" type="button" id="st-report">${ICON.megaphone}<span>Relatar um trem nesta estação</span></button>`; $('#st-report', body).onclick = () => openReportPicker(st); }
   if (state.stTab === 'horarios') { body.innerHTML = horariosHtml(st, dt); bindHorarios(body, st); }
-  if (state.stTab === 'servicos') { body.innerHTML = servicosHtml(st, dt); bindServicos(body, st); }
+  if (state.stTab === 'servicos') {
+    const parts = servicosParts(st, dt);
+    body.innerHTML = parts.official + `<button class="detail-open" id="open-detail" type="button"><span>Vagão, acessibilidade e relatos</span>${ICON.chev}</button>`;
+    $('#open-detail', body).onclick = () => {
+      $('#detail-body').innerHTML = parts.detail;
+      bindServicos($('#detail-body'), st);
+      $('#detail').showModal();
+    };
+  }
   loadStation(st, dt).then(fresh => { if (fresh && parseHash().seg === 'estacao' && parseHash().arg === st) renderEstacao(); });
 }
 
@@ -750,7 +761,7 @@ function proximosHtml(st, m, dt) {
     const dir = first.trip.dir;
     const crowd = crowdForecast(g.line.id, dir, first.sched, st);
     const car = bestCar(st, g.line.id, dir, 'saida');
-    const carLine = car && !car.weak ? `<div class="car-line">${cars(car.zone)}<span>Vagão do <b>${ZONE[car.zone].toLowerCase()}</b> para sair mais perto da saída</span></div>` : '';
+    const carLine = car && !car.weak ? `<div class="car-line">${cars(car.zone)}<span>Entre no vagão do <b>${ZONE[car.zone].toLowerCase()}</b> para sair perto da saída</span></div>` : '';
     return `<article class="dep${diff < 2 ? ' imminent' : ''}" style="--c:${g.line.color}" data-eta="${first.eta}">
       <header class="dep-head">${badge(g.line)}<span class="dep-dir">para <b>${esc(g.dest)}</b></span>
         <button class="report-btn" type="button" data-report="${g.line.id}|${dir}" aria-label="Relatar sobre ${esc(g.line.name)}">${ICON.megaphone}<span>Relatar</span></button></header>
@@ -784,7 +795,7 @@ function horariosHtml(st, dt) {
     .filter(x => x.s && withinOfficial(st, x.dest, x.s.time, t.day))
     .map(x => x.s.time).sort((a, b) => a - b);
   const o = officialLine(st, destOf(line, t.dir), t.day);
-  const head = o ? `<div class="official-note">${ICON.check}<span>Oficial (${DIA_LABEL[t.day]}): 1º trem <b>${o.first}</b> · último <b>${o.last}</b>. Os horários entre eles são estimados.</span></div>` : '';
+  const head = o ? `<div class="official-note">${ICON.check}<span>Primeiro trem <b>${o.first}</b> e último <b>${o.last}</b> (${DIA_LABEL[t.day]}), segundo a operadora. Os horários do meio são estimados.</span></div>` : '';
   const chips = `<div class="chips-scroll lines-chips">${lines.map(l =>
     `<button class="lchip" type="button" style="--c:${l.color}" data-tl="${l.id}" aria-pressed="${l.id === line.id}"><i></i>${esc(l.name)}</button>`).join('')}</div>`;
   const ctl = `<div class="ctl">
@@ -817,7 +828,7 @@ function bindHorarios(body, st) {
   $('#times-past', body)?.addEventListener('click', () => { t.showPast = true; renderEstacao(); });
 }
 
-function servicosHtml(st, dt) {
+function servicosParts(st, dt) {
   const off = officialStation(st);
   const data = COMM.stations.get(st);
   const lines = linesAt(st);
@@ -856,10 +867,13 @@ function servicosHtml(st, dt) {
     return `<div class="feed-row"><span class="feed-what">${what}</span>${l ? badge(l) : ''}<span class="muted small">${r.ago < 1 ? 'agora' : `há ${r.ago} min`}</span></div>`;
   }).join('') : `<p class="panel-empty">Nenhum relato na última hora.</p>`;
 
-  return `${info}
-    <section class="card panel"><div class="panel-head"><h2>Vagão certo</h2><span class="panel-sub">para sair nesta estação, segundo passageiros</span></div>${vagao || '<p class="panel-empty">Sem ramais.</p>'}</section>
+  return {
+    official: info || '<p class="panel-empty">Esta estação não tem dados publicados pela operadora.</p>',
+    detail: `
+    <section class="card panel"><div class="panel-head"><h2>Melhor vagão</h2><span class="panel-sub">para sair perto da saída, segundo passageiros</span></div>${vagao || '<p class="panel-empty">Sem ramais.</p>'}</section>
     <section class="card panel"><div class="panel-head"><h2>Acessibilidade</h2><span class="panel-sub">informada por passageiros e pela operadora</span></div>${acess}</section>
-    <section class="card panel"><div class="panel-head"><h2>Última hora</h2></div>${feed}</section>`;
+    <section class="card panel"><div class="panel-head"><h2>Relatos da última hora</h2></div>${feed}</section>`,
+  };
 }
 
 function bindServicos(body, st) {
@@ -993,6 +1007,7 @@ function renderMapa() {
         <span class="map-count" id="map-count" aria-live="polite"></span>
         <div class="map-legend" id="map-legend"></div></div>
       <section class="card trip-card" id="trip-card"></section>
+      <details class="map-list"><summary>Ver as estações em lista</summary>${mapListHtml()}</details>
       <p class="fineprint">Posição dos trens estimada a partir dos horários. A operadora não publica a posição real dos trens.</p>`;
     loadGeo().then(() => { initMap(); drawMapLayers(); updateWhere(); drawTrip(); });
   } else {
@@ -1001,6 +1016,12 @@ function renderMapa() {
   setTimeout(() => MAP.map && MAP.map.invalidateSize(), 50);
   if (!MAP.timer) MAP.timer = setInterval(() => { if (parseHash().seg === 'mapa') drawTrains(); }, 5000);
   drawTrains();
+}
+
+// Alternativa em lista ao mapa, para quem usa leitor de tela ou prefere texto.
+function mapListHtml() {
+  return LINES.map(l => `<section class="maplist-line"><h3>${badge(l)} <span class="muted small">${esc(l.from)} ↔ ${esc(l.to)}</span></h3>
+    <ol>${l.stops.map(([n]) => `<li><a href="#/estacao/${encodeURIComponent(n)}">${esc(n)}</a></li>`).join('')}</ol></section>`).join('');
 }
 
 function initMap() {
@@ -1203,7 +1224,13 @@ function renderPremiumLock(el) {
   if (el.dataset.lock) return;
   el.dataset.lock = '1';
   el.innerHTML = `
-    <h1 class="page-title">Mapa ao vivo</h1>
+    <h1 class="page-title">Mapa ao vivo <em class="pbadge">Premium</em></h1>
+    <div class="lock-preview" aria-hidden="true">
+      <svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice">
+        ${LINES.slice(0, 6).map((l, i) => `<path d="M${20 + i * 8} ${20 + i * 22} C 120 ${40 + i * 15}, 220 ${170 - i * 18}, 380 ${60 + i * 20}" stroke="${l.color}" stroke-width="7" fill="none" stroke-linecap="round"/>`).join('')}
+        ${[[80, 70], [160, 120], [240, 90], [300, 150], [350, 60]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7" fill="#fff" stroke="#1f4fe0" stroke-width="3"/>`).join('')}
+      </svg>
+    </div>
     <section class="card premium-lock">
       <span class="lock-ico">${ICON.pin}</span>
       <h2>O mapa é do Ramal Premium</h2>
@@ -1213,7 +1240,8 @@ function renderPremiumLock(el) {
         <button class="btn primary-btn" type="submit">Ativar código</button>
       </form>
       <p class="note" id="premium-msg" role="status" aria-live="polite"></p>
-      <a class="btn ghost" href="apoio.html" target="_blank" rel="noopener">Assinar por Pix</a>
+      <a class="btn ghost" href="apoio.html#premium" target="_blank" rel="noopener">Quero ser Premium (R$ 5/mês)</a>
+      <p class="note">Já tem um código? Digite acima. Sem código, o mapa fica bloqueado.</p>
     </section>`;
   $('#premium-form', el).addEventListener('submit', async e => {
     e.preventDefault();
@@ -1243,6 +1271,24 @@ async function pollOverview() {
 }
 
 route();
+
+// Boas-vindas (primeira visita) e pop-up Premium (a cada abertura do app, sem repetir a cada toque).
+const welcomeDlg = $('#welcome');
+if (!store.get('welcomed', false)) {
+  welcomeDlg.showModal();
+}
+// Pop-up Premium: aparece depois de 4 s em cada abertura, e de novo após fechar a boas-vindas.
+function showPromo(delay = 4000) {
+  setTimeout(() => {
+    if (!welcomeDlg.open && !isPremium() && !$('#action').open && !picker.open && !$('#promo').open) $('#promo').showModal();
+  }, delay);
+}
+welcomeDlg.addEventListener('close', () => { store.set('welcomed', true); showPromo(1200); });
+$('#welcome-pick').onclick = () => {
+  welcomeDlg.close();
+  openPicker('Sua estação', n => { state.station = n; store.set('station', n); remember(n); render(); });
+};
+showPromo(4000);
 setInterval(() => { const s = parseHash().seg; if (s === 'inicio' || s === 'linha' || s === 'linhas' || s === 'estacao') render(); }, 15000);
 pollRealtime();
 setInterval(pollRealtime, 30000);

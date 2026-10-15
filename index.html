@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="">
-  <link rel="stylesheet" href="styles.css?v=23">
+  <link rel="stylesheet" href="styles.css?v=25">
 </head>
 <body>
   <a class="skip" href="#main">Pular para o conteúdo</a>
@@ -43,7 +43,7 @@
       <p>Ramal é um projeto independente, sem vínculo com a operadora dos trens nem com o Governo do Estado.</p>
       <p class="apoio"><a class="apoio-btn" id="apoio" href="apoio.html" target="_blank" rel="noopener">Ajude a manter o site no ar</a>
 </p>
-      <p><a href="privacidade.html">Política de privacidade</a></p>
+      <p><a href="privacidade.html">Política de privacidade</a> · <a href="https://wa.me/5521976497605" target="_blank" rel="noopener">Fale conosco no WhatsApp: (21) 97649-7605</a></p>
     </footer>
   </main>
 
@@ -80,18 +80,59 @@
     <div id="info-body" class="info-body"></div>
   </dialog>
 
+  <dialog id="welcome" class="sheet small" aria-labelledby="welcome-title">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <div class="welcome-body">
+      <div class="welcome-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="9"/><path d="M12 25V7M12 18c0-4 3-6.5 9-6.5"/><circle cx="21" cy="11.5" r="2.6"/></svg></div>
+      <h2 id="welcome-title">Bem-vindo ao Ramal</h2>
+      <p>Veja os próximos trens da sua estação, planeje sua viagem e fique sabendo de avisos. Para começar, escolha a estação onde você costuma pegar o trem.</p>
+      <button class="btn primary-btn" id="welcome-pick" type="button">Escolher minha estação</button>
+      <button class="text-btn" type="button" data-close>Agora não</button>
+    </div>
+  </dialog>
+
+  <dialog id="promo" class="sheet small" aria-labelledby="promo-title">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <div class="welcome-body">
+      <span class="promo-badge">Premium</span>
+      <h2 id="promo-title">Seja Premium e tenha benefícios</h2>
+      <ul class="promo-list">
+        <li>Mapa ao vivo com os trens se deslocando</li>
+        <li>Sua posição e o trajeto até o destino no mapa</li>
+        <li>Apoio direto à manutenção do Ramal</li>
+      </ul>
+      <p class="note">R$ 5 por mês, pago por Pix.</p>
+      <a class="btn primary-btn" href="apoio.html#premium" target="_blank" rel="noopener">Ver como ser Premium</a>
+      <button class="text-btn" type="button" data-close>Agora não</button>
+    </div>
+  </dialog>
+
+  <dialog id="detail" class="sheet" aria-labelledby="detail-title">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="detail-title">Detalhes e relatos</h2>
+      <button class="text-btn" type="button" data-close>Fechar</button>
+    </div>
+    <div id="detail-body" class="detail-body"></div>
+  </dialog>
+
+  <a class="wa-fab" id="wa-fab" href="https://wa.me/5521976497605" target="_blank" rel="noopener" aria-label="Falar com o Ramal pelo WhatsApp">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a9.5 9.5 0 0 0-8.2 14.3L2.5 21.5l4.8-1.3A9.5 9.5 0 1 0 12 2.5zm0 1.8a7.7 7.7 0 1 1-4 14.3l-.3-.2-2.8.8.8-2.7-.2-.3A7.7 7.7 0 0 1 12 4.3zm-3.1 4c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s1 2.6 1.1 2.7c.1.2 1.9 3 4.7 4.1 2.3.9 2.8.7 3.3.7.5-.1 1.6-.7 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.2-.2-.5-.3l-1.8-.9c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.8-2c-.2-.5-.4-.4-.6-.4h-.5z"/></svg>
+    <span>WhatsApp</span>
+  </a>
+
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <script>
     // Estatística de visitas: código da sua conta no GoatCounter (ex.: 'ramal'). Vazio = desligado.
     window.RAMAL_GOATCOUNTER = '';
   </script>
-  <script src="gtfs-data.js?v=21"></script>
-  <script src="oficial-data.js?v=21"></script>
-  <script src="data.js?v=21"></script>
-  <script src="schedule.js?v=21"></script>
-  <script src="community.js?v=23"></script>
+  <script src="gtfs-data.js?v=25"></script>
+  <script src="oficial-data.js?v=25"></script>
+  <script src="data.js?v=25"></script>
+  <script src="schedule.js?v=25"></script>
+  <script src="community.js?v=25"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin=""></script>
-  <script src="app.js?v=23"></script>
+  <script src="app.js?v=25"></script>
 </body>
 </html>

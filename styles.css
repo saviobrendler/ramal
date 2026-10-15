@@ -7,7 +7,7 @@
   --surface-3: #e7eaef;
   --ink: #0d1321;
   --ink-2: #384152;
-  --muted: #6b7486;
+  --muted: #566073;
   --line: #e4e7ec;
   --brand: #1f4fe0;
   --brand-soft: #e9efff;
@@ -37,7 +37,7 @@
     --surface-3: #252e3e;
     --ink: #eef1f6;
     --ink-2: #c3cad6;
-    --muted: #8a94a6;
+    --muted: #aab3c2;
     --line: #232b3a;
     --brand: #6f93ff;
     --brand-soft: #1b2645;
@@ -937,3 +937,40 @@ body { background: radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, 
 .map-train svg rect { fill: var(--c); }
 .map-train svg path { stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; }
 .map-train.late svg { filter: drop-shadow(0 0 0 transparent) drop-shadow(0 0 6px rgba(217,119,6,.9)); }
+
+/* ================= Revisão de UX ================= */
+.pbadge { display: inline-block; vertical-align: middle; font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: linear-gradient(90deg, #ffcf33, #ffb020); color: #2a1d00; margin-left: 6px; }
+.lock-preview { position: relative; height: 200px; border-radius: 22px; overflow: hidden; margin-bottom: 12px; background: var(--surface-2); }
+.lock-preview svg { width: 100%; height: 100%; filter: blur(3px) saturate(1.1); opacity: .9; }
+.lock-preview::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg) 70%, transparent)); }
+.wa-fab { position: fixed; right: 16px; bottom: calc(var(--tabbar) + 16px + env(safe-area-inset-bottom)); z-index: 30; display: inline-flex; align-items: center; gap: 8px; height: 52px; padding: 0 18px 0 14px; border-radius: 999px; background: #25d366; color: #fff; font-weight: 700; font-size: 15px; text-decoration: none; box-shadow: 0 10px 26px -8px rgba(37,211,102,.7); transition: transform .15s var(--ease); }
+.wa-fab:hover { transform: translateY(-2px); }
+.wa-fab svg { width: 26px; height: 26px; fill: #fff; }
+@media (min-width: 760px) { .wa-fab { bottom: 24px; } }
+.report-wide { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 14px; height: 50px; border-radius: 16px; border: 1.5px dashed var(--surface-3); color: var(--brand); font-weight: 700; font-size: 15px; background: transparent; }
+.report-wide .ico { width: 20px; height: 20px; }
+.detail-open { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 14px; padding: 16px 18px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); font-weight: 700; font-size: 15px; box-shadow: var(--shadow); }
+.detail-open .ico { color: var(--muted); }
+.detail-body { padding: 0 16px 24px; overflow-y: auto; display: grid; gap: 12px; }
+.detail-body .panel { margin: 0; }
+.welcome-body { display: grid; gap: 12px; justify-items: center; text-align: center; padding: 8px 24px 26px; }
+.welcome-body h2 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+.welcome-body p { margin: 0; color: var(--ink-2); max-width: 380px; font-size: 15px; }
+.welcome-body .primary-btn { width: 100%; max-width: 360px; justify-content: center; }
+.welcome-mark { width: 64px; height: 64px; }
+.welcome-mark svg { width: 100%; height: 100%; }
+.welcome-mark rect { fill: var(--brand); }
+.welcome-mark path { stroke: #fff; stroke-width: 3; fill: none; stroke-linecap: round; }
+.welcome-mark circle { fill: var(--sun); }
+.promo-badge { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; background: linear-gradient(90deg, #ffcf33, #ffb020); color: #2a1d00; }
+.promo-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; text-align: left; width: 100%; max-width: 360px; }
+.promo-list li { position: relative; padding-left: 28px; color: var(--ink-2); font-size: 15px; }
+.promo-list li::before { content: ""; position: absolute; left: 4px; top: 7px; width: 10px; height: 6px; border-left: 2.5px solid var(--ok); border-bottom: 2.5px solid var(--ok); transform: rotate(-45deg); }
+.map-list { margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px 18px; }
+.map-list summary { cursor: pointer; font-weight: 700; color: var(--brand); }
+.maplist-line { margin-top: 14px; }
+.maplist-line h3 { margin: 0 0 6px; font-size: 16px; }
+.maplist-line ol { margin: 0; padding-left: 20px; columns: 2; }
+.maplist-line li { font-size: 14.5px; padding: 2px 0; break-inside: avoid; }
+.maplist-line a { color: var(--ink); }
+.maplist-line a:hover { color: var(--brand); }
