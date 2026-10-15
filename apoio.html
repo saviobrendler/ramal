@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ajude a manter o Ramal no ar</title>
+  <meta name="description" content="Apoie o Ramal via Pix ou conheça o Ramal Premium.">
+  <link rel="stylesheet" href="styles.css?v=23">
+  <style>
+    .apoio-page { max-width: 640px; margin: 0 auto; padding: 24px 16px 56px; }
+    .apoio-page h1 { font-size: 30px; line-height: 1.15; letter-spacing: -.025em; margin: 6px 0 8px; }
+    .apoio-page h2 { font-size: 20px; letter-spacing: -.02em; margin: 0 0 10px; }
+    .apoio-page p, .apoio-page li { color: var(--ink-2); font-size: 15px; line-height: 1.55; }
+    .apoio-page ul, .apoio-page ol { padding-left: 20px; margin: 8px 0 0; }
+    .card-pad { padding: 20px; margin-bottom: 16px; }
+    .amounts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+    .amounts button { height: 46px; border-radius: 12px; background: var(--surface-2); font-weight: 700; font-size: 15px; border: 1px solid transparent; }
+    .amounts button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); }
+    .qr-box { display: grid; place-items: center; padding: 14px; background: #fff; border-radius: 18px; margin: 8px auto 14px; width: min(100%, 280px); aspect-ratio: 1; }
+    .qr-box img, .qr-box canvas, .qr-box table { width: 100% !important; height: auto !important; }
+    .copy-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .copy-row .btn { flex: 1; min-width: 180px; justify-content: center; }
+    .code-box { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; word-break: break-all; background: var(--surface-2); border-radius: 12px; padding: 12px; margin: 10px 0 0; color: var(--ink-2); max-height: 84px; overflow: auto; }
+    .key-line { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; word-break: break-all; margin: 6px 0 0; }
+    .premium { border: 1px solid color-mix(in srgb, var(--brand) 35%, var(--line)); background: linear-gradient(160deg, var(--brand-soft), var(--surface) 60%); }
+    .price { font-size: 34px; font-weight: 800; letter-spacing: -.03em; }
+    .price small { font-size: 15px; font-weight: 600; color: var(--muted); }
+    .note { font-size: 13px; color: var(--muted); }
+    .toast-msg { margin-top: 10px; font-weight: 650; color: var(--ok); min-height: 20px; }
+  </style>
+</head>
+<body>
+  <main class="apoio-page">
+    <a class="back" href="index.html">← Voltar ao Ramal</a>
+
+    <h1>Ajude a manter o Ramal no ar</h1>
+    <p>O Ramal é gratuito e independente. O apoio paga o servidor, o domínio e a manutenção dos dados de horários. Qualquer valor ajuda, e o Pix chega direto na conta do projeto.</p>
+
+    <section class="card card-pad" aria-labelledby="pagar-title">
+      <h2 id="pagar-title">Pagar com Pix</h2>
+      <p class="note">Escolha um valor sugerido ou deixe em branco para digitar o valor no app do seu banco.</p>
+      <div class="amounts" role="group" aria-label="Valor">
+        <button type="button" data-amount="">Livre</button>
+        <button type="button" data-amount="5">R$ 5</button>
+        <button type="button" data-amount="10">R$ 10</button>
+        <button type="button" data-amount="20">R$ 20</button>
+      </div>
+
+      <div class="qr-box" id="qr" role="img" aria-label="QR Code Pix para apoiar o Ramal"></div>
+
+      <div class="copy-row">
+        <button class="btn primary-btn" id="copy-code" type="button">Copiar código Pix</button>
+        <button class="btn ghost" id="copy-key" type="button">Copiar só a chave</button>
+      </div>
+      <p class="toast-msg" id="msg" role="status" aria-live="polite"></p>
+
+      <p class="note" style="margin-top:14px">Código "copia e cola":</p>
+      <div class="code-box" id="code"></div>
+      <p class="note" style="margin-top:14px">Chave Pix (aleatória):</p>
+      <p class="key-line" id="key"></p>
+    </section>
+
+    <section class="card card-pad premium" aria-labelledby="premium">
+      <h2 id="premium">Ramal Premium</h2>
+      <div class="price">R$ 5<small> / mês</small></div>
+      <p>Assinatura mensal para desbloquear o <b>mapa ao vivo</b>, com os trens se deslocando e a sua posição, e para apoiar o projeto.</p>
+      <ol>
+        <li>Pague R$ 5 com o Pix acima.</li>
+        <li>Envie o comprovante para o contato indicado na <a href="privacidade.html">política de privacidade</a>.</li>
+        <li>Você recebe um código de 30 dias e o digita no app, em Mapa ao vivo.</li>
+      </ol>
+      <p class="note" style="margin-top:12px">A ativação é feita manualmente após conferir o pagamento. O app não confirma Pix sozinho, e a renovação é mensal, por sua conta. O conteúdo do mapa é dado público, e o Premium é uma contribuição de apoio, não uma compra de dados.</p>
+    </section>
+
+    <p class="note">Ramal é um projeto independente, sem vínculo com a operadora dos trens nem com o Governo do Estado.</p>
+  </main>
+
+  <script src="pix.js?v=23"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha512-ZDSPMa/JM1D+7kdg2x3BsruQ6T/JpJo3jWDWkCZsP+5yVyp1KfESqLI+7RqB5k24F7p2cV7i2YHh/890y6P6Sw==" crossorigin=""></script>
+  <script>
+    const key = RamalPix.PIX_KEY;
+    let amount = null;
+    const msg = document.getElementById('msg');
+
+    function render() {
+      const code = RamalPix.pixPayload({ amount });
+      const qr = qrcode(0, 'M');
+      qr.addData(code);
+      qr.make();
+      document.getElementById('qr').innerHTML = qr.createImgTag(6, 8);
+      document.getElementById('code').textContent = code;
+      document.getElementById('key').textContent = key;
+    }
+
+    document.querySelectorAll('[data-amount]').forEach(b => b.addEventListener('click', () => {
+      amount = b.dataset.amount ? Number(b.dataset.amount) : null;
+      document.querySelectorAll('[data-amount]').forEach(x => x.setAttribute('aria-pressed', x === b));
+      render();
+    }));
+
+    async function copy(text, ok) {
+      try { await navigator.clipboard.writeText(text); msg.textContent = ok; }
+      catch { msg.textContent = 'Não foi possível copiar. Selecione o texto e copie manualmente.'; }
+    }
+    document.getElementById('copy-code').addEventListener('click', () => copy(RamalPix.pixPayload({ amount }), 'Código copiado. Cole no app do seu banco. Obrigado!'));
+    document.getElementById('copy-key').addEventListener('click', () => copy(key, 'Chave copiada. Obrigado!'));
+
+    document.querySelector('[data-amount=""]').setAttribute('aria-pressed', 'true');
+    render();
+  </script>
+</body>
+</html>

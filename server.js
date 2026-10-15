@@ -103,10 +103,12 @@ const { Community, HttpError, migrateJson } = require('./server/community');
 const { Safety } = require('./server/safety');
 const { Online } = require('./server/online');
 const online = new Online();
+const { Premium } = require('./server/premium');
 const dbFile = path.resolve(root, env('COMMUNITY_FILE') || 'data/community.db');
 const community = new Community({ root, file: dbFile });
 const migrated = migrateJson(community, path.resolve(root, 'data/community.json'));
 if (migrated) console.log(`Relatos antigos importados do JSON: ${migrated}`);
+const premium = new Premium(community.db);
 const safety = new Safety({ root, net: community.net, env });
 const ADMIN_TOKEN = env('ADMIN_TOKEN') || '';
 const shutdown = () => { try { community.close(); } catch { /* já fechado */ } process.exit(0); };
@@ -156,6 +158,11 @@ async function api(req, res, url, q) {
     const body = await readBody(req);
     return sendJson(res, 200, { online: online.beat(body.dev) });
   }
+  if (url === '/api/premium/activate' && req.method === 'POST') {
+    const body = await readBody(req);
+    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || '';
+    return sendJson(res, 200, premium.activate(body.code, ip));
+  }
   if (url === '/api/online') return sendJson(res, 200, { online: online.count() });
   if (url === '/api/health') return sendJson(res, 200, { ok: true, fogoCruzado: safety.fcStatus, reports: community.count() });
   if (url.startsWith('/api/admin/')) return adminApi(req, res, url, q);
@@ -180,6 +187,13 @@ async function adminApi(req, res, url, q) {
     const body = await readBody(req);
     return sendJson(res, 200, community.block(body.dev, body.reason));
   }
+  if (url === '/api/admin/premium/create' && req.method === 'POST') {
+    const body = await readBody(req);
+    return sendJson(res, 200, { code: premium.create({ days: body.days, label: body.label }) });
+  }
+  if (url === '/api/admin/premium/list') {
+    return sendJson(res, 200, { codes: premium.list() });
+  }
   if (url === '/api/admin/unblock' && req.method === 'POST') {
     const body = await readBody(req);
     return sendJson(res, 200, community.unblock(body.dev));
@@ -193,7 +207,7 @@ const types = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
 };
-const PUBLIC = new Set(['/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/gtfs-data.js', '/oficial-data.js', '/stations-geo.json', '/privacidade.html',
+const PUBLIC = new Set(['/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/gtfs-data.js', '/oficial-data.js', '/stations-geo.json', '/privacidade.html', '/apoio.html', '/pix.js',
   '/sw.js', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/maskable-512.png', '/icons/icon.svg']);
 
 http.createServer(async (req, res) => {

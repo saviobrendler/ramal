@@ -923,3 +923,17 @@ body { background: radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, 
 .apoio { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .apoio-btn { display: inline-flex; align-items: center; height: 38px; padding: 0 16px; border-radius: 999px; background: var(--brand); color: var(--brand-ink) !important; font-weight: 700; font-size: 14px; border: 0; cursor: pointer; text-decoration: none; }
 .apoio-btn.ghost { background: var(--surface-2); color: var(--ink) !important; }
+
+.premium-lock { text-align: center; padding: 28px 20px; display: grid; gap: 12px; justify-items: center; background: linear-gradient(160deg, var(--brand-soft), var(--surface) 65%); }
+.premium-lock h2 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+.premium-lock p { margin: 0; color: var(--ink-2); max-width: 520px; }
+.lock-ico { width: 56px; height: 56px; border-radius: 18px; background: var(--surface); display: grid; place-items: center; color: var(--brand); box-shadow: var(--shadow); }
+.lock-ico .ico { width: 26px; height: 26px; }
+.premium-form { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 420px; align-items: flex-end; }
+.premium-form .input { flex: 1; min-width: 200px; text-align: left; }
+.premium-lock .btn { text-decoration: none; }
+.map-train { background: none !important; box-shadow: none !important; }
+.map-train svg { width: 30px; height: 30px; fill: var(--c); stroke: #fff; stroke-width: 1.4; stroke-linejoin: round; filter: drop-shadow(0 3px 5px rgba(0,0,0,.35)); transition: transform .3s; }
+.map-train svg rect { fill: var(--c); }
+.map-train svg path { stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.map-train.late svg { filter: drop-shadow(0 0 0 transparent) drop-shadow(0 0 6px rgba(217,119,6,.9)); }

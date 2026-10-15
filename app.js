@@ -982,6 +982,8 @@ function fmtDist(km) { return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFi
 
 function renderMapa() {
   const el = $('#v-mapa');
+  if (!isPremium()) return renderPremiumLock(el);
+  if (el.dataset.lock) { delete el.dataset.lock; el.dataset.ready = ''; }
   if (!el.dataset.ready) {
     el.dataset.ready = '1';
     el.innerHTML = `
@@ -1056,7 +1058,7 @@ function drawTrains() {
     const late = trip.delay ? ' late' : '';
     const icon = L.divIcon({
       className: 'map-train-wrap',
-      html: `<div class="map-train${late}" style="--c:${trip.line.color}" title="${esc(trip.line.name)} para ${esc(trip.dest)}">${trip.dir ? '▲' : '▼'}</div>`,
+      html: `<div class="map-train${late}" style="--c:${trip.line.color}" title="${esc(trip.line.name)} para ${esc(trip.dest)}"><svg viewBox="0 0 24 24" style="transform:rotate(${trip.dir ? 180 : 0}deg)"><rect x="5" y="3" width="14" height="13" rx="3"/><path d="M5 11h14M8 20l2-3M16 20l-2-3"/></svg></div>`,
       iconSize: [26, 26], iconAnchor: [13, 13],
     });
     L.marker(c, { icon, title: `${trip.line.name} para ${trip.dest}${trip.delay ? `, ${trip.delay} min de atraso` : ''}` }).addTo(MAP.trains);
@@ -1190,15 +1192,44 @@ if (window.RAMAL_GOATCOUNTER) {
   document.head.appendChild(gc);
 }
 
-// ---------- Apoio voluntário ----------
-if (window.RAMAL_APOIA) { const b = $('#apoio'); b.href = window.RAMAL_APOIA; b.hidden = false; }
-if (window.RAMAL_PIX) {
-  const b = $('#pix-copy');
-  b.hidden = false;
-  b.onclick = async () => {
-    try { await navigator.clipboard.writeText(window.RAMAL_PIX); toast('Chave Pix copiada. Obrigado pelo apoio!'); }
-    catch { toast(`Chave Pix: ${window.RAMAL_PIX}`); }
-  };
+// ---------- Ramal Premium ----------
+// Código de 30 dias, digitado no app depois de confirmar o Pix (ver apoio.html e server/premium.js).
+function isPremium() {
+  const p = store.get('premium', null);
+  return !!(p && p.expires > Date.now());
+}
+
+function renderPremiumLock(el) {
+  if (el.dataset.lock) return;
+  el.dataset.lock = '1';
+  el.innerHTML = `
+    <h1 class="page-title">Mapa ao vivo</h1>
+    <section class="card premium-lock">
+      <span class="lock-ico">${ICON.pin}</span>
+      <h2>O mapa é do Ramal Premium</h2>
+      <p>Veja os trens se deslocando no mapa, a sua posição e o trajeto até o seu destino. Assinatura de <b>R$ 5 por mês</b>, que também ajuda a manter o site no ar.</p>
+      <form id="premium-form" class="premium-form" autocomplete="off">
+        <label class="input"><span class="eyebrow">Código de acesso</span><input id="premium-code" placeholder="XXXX-XXXX-XXXX" maxlength="20" aria-describedby="premium-msg"></label>
+        <button class="btn primary-btn" type="submit">Ativar código</button>
+      </form>
+      <p class="note" id="premium-msg" role="status" aria-live="polite"></p>
+      <a class="btn ghost" href="apoio.html" target="_blank" rel="noopener">Assinar por Pix</a>
+    </section>`;
+  $('#premium-form', el).addEventListener('submit', async e => {
+    e.preventDefault();
+    const code = $('#premium-code', el).value.trim();
+    const msg = $('#premium-msg', el);
+    msg.textContent = 'Verificando…';
+    try {
+      const res = await fetch(API_BASE + 'api/premium/activate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+      const j = await res.json();
+      if (!res.ok) { msg.textContent = j.error || 'Não foi possível ativar.'; return; }
+      store.set('premium', { expires: j.expires });
+      toast('Premium ativado. Bem-vindo ao mapa!');
+      delete el.dataset.lock;
+      renderMapa();
+    } catch { msg.textContent = 'Sem conexão. Tente de novo quando estiver online.'; }
+  });
 }
 
 // ---------- Atualização ----------
