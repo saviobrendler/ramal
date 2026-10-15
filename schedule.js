@@ -11,7 +11,10 @@ const fmt = m => {
 };
 
 function spNow() {
-  return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  // Lê data e hora de São Paulo pelas partes (funciona em todos os navegadores, inclusive Firefox e Safari antigos).
+  const p = {};
+  for (const x of new Intl.DateTimeFormat('en-US', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).formatToParts(new Date())) p[x.type] = x.value;
+  return new Date(+p.year, +p.month - 1, +p.day, (+p.hour) % 24, +p.minute, +p.second);
 }
 const minutesOf = d => d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
 const dayTypeOf = d => (d.getDay() === 0 ? 'dom' : d.getDay() === 6 ? 'sab' : 'util');

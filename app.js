@@ -331,7 +331,7 @@ function officialLine(station, dest, dayType) {
   const st = officialStation(station);
   if (!st) return null;
   const rows = st.trens.filter(t => t.para === dest && t.dia === dayType);
-  return rows.length ? { first: rows.map(r => r.primeiro).sort()[0], last: rows.map(r => r.ultimo).sort().at(-1) } : null;
+  return rows.length ? { first: rows.map(r => r.primeiro).sort()[0], last: rows.map(r => r.ultimo).sort().slice(-1)[0] } : null;
 }
 
 function statusTag(it) {

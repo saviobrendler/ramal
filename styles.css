@@ -447,13 +447,13 @@ input, select { font: inherit; color: inherit; }
 /* ---------- Folhas (diálogos) ---------- */
 .sheet {
   border: 0; padding: 0; color: var(--ink); background: var(--surface);
-  width: 100%; max-width: 100%; max-height: 92dvh; height: 92dvh;
+  width: 100%; max-width: 100%; max-height: 92vh; max-height: 92dvh; height: 92vh; height: 92dvh;
   margin: auto auto 0; border-radius: 24px 24px 0 0; box-shadow: var(--shadow-lg);
   display: flex; flex-direction: column; overflow: hidden;
 }
 .sheet:not([open]) { display: none; }
 /* height:auto num dialog (top/bottom fixos) estica até o max; fit-content encolhe ao conteúdo. */
-.sheet.small { height: fit-content; max-height: 80dvh; }
+.sheet.small { height: fit-content; max-height: 80vh; max-height: 80dvh; }
 .sheet::backdrop { background: rgba(8, 12, 20, .45); backdrop-filter: blur(2px); }
 .sheet[open] { animation: up .28s var(--ease); }
 .sheet[open]::backdrop { animation: fadein .2s ease; }
@@ -992,3 +992,10 @@ button:disabled, [aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
 .map-train { background: var(--c) !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; border: 2px solid #fff !important; box-shadow: 0 3px 10px rgba(0,0,0,.45) !important; display: grid !important; place-items: center; }
 .map-train-img { width: 20px !important; height: 20px !important; filter: brightness(0) invert(1) !important; }
 .map-train.late { border-color: #ffb35c !important; }
+
+/* Compatibilidade: navegadores antigos sem color-mix() usam a cor sólida; iOS sem suporte ao foco visível */
+@supports not (color: color-mix(in srgb, red 50%, blue)) {
+  .appbar, .tabbar { background: var(--bg); }
+  .card, .dep, .route, .alert { background: var(--surface); }
+  .status.live { background: var(--ok-soft); }
+}
