@@ -772,3 +772,88 @@ button:disabled { opacity: .6; pointer-events: none; }
 #v-linha, #v-estacao, #v-linhas, #v-avisos, #v-rota, #v-inicio { max-width: 720px; margin-left: auto; margin-right: auto; }
 .page-title { margin-top: 0; }
 .route-when { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; min-width: 0; }
+/* ================= Acabamento premium ================= */
+
+/* Fundo com leve profundidade */
+body { background: radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--brand) 9%, transparent), transparent 60%), radial-gradient(900px 500px at 110% 0%, color-mix(in srgb, var(--sun) 10%, transparent), transparent 55%), var(--bg); background-attachment: fixed; }
+
+/* Contador de chegada */
+.when-min { display: inline-flex; align-items: baseline; font-size: 24px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+.when-min small { font-size: .5em; font-weight: 650; margin-left: 3px; color: var(--muted); letter-spacing: 0; }
+.when-clock { font-size: 22px; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.when-now { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; color: var(--ok); font-size: 18px; letter-spacing: -.01em; animation: blink 1s steps(2, start) infinite; }
+.when-now::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); animation: ring 1.4s ease-out infinite; }
+@keyframes blink { to { opacity: .45; } }
+@keyframes ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
+
+/* Cartão e linha "chegando" */
+.next-row.imminent, .dep.imminent { background: linear-gradient(90deg, color-mix(in srgb, var(--ok) 13%, transparent), transparent 75%), var(--surface); }
+.next-row.imminent .next-bar { animation: blink 1s steps(2, start) infinite; box-shadow: 0 0 12px var(--c); }
+.dep.imminent { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); animation: glow 1.6s ease-in-out infinite; }
+@keyframes glow { 0%, 100% { box-shadow: var(--shadow); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 16%, transparent), var(--shadow); } }
+.dep .eta .when-min { font-size: 44px; }
+.dep .eta .when-clock { font-size: 34px; }
+.dep .eta .when-now { font-size: 30px; }
+
+/* Atraso em destaque */
+.delay-badge { display: inline-flex; flex-direction: column; align-items: flex-end; padding: 5px 10px; border-radius: 10px; background: var(--late-soft); color: var(--late); font-weight: 800; font-size: 16px; line-height: 1.05; font-variant-numeric: tabular-nums; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--late) 22%, transparent); }
+.delay-badge small { font-size: 11px; font-weight: 650; opacity: .85; letter-spacing: .02em; }
+.late-sm { display: inline-block; margin-top: 2px; padding: 1px 7px; border-radius: 6px; background: var(--late-soft); color: var(--late); font-size: 12px; font-weight: 750; }
+
+/* Cartões: profundidade e borda sutil */
+.card, .dep, .route, .alert, .punct, .line-item, .stop-list, .hours, .panel, .station-card {
+  border-color: color-mix(in srgb, var(--line) 85%, transparent);
+  transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s;
+}
+.dep:hover, .route:hover, .line-item:hover, .punct:hover { box-shadow: 0 10px 30px -12px rgba(13, 19, 33, .22); }
+.dep { border-radius: 20px; }
+.dep::before { width: 4px; border-radius: 0 4px 4px 0; }
+
+/* Título e tipografia */
+.page-title, .st-title, .station-pick .station-name { font-feature-settings: "ss01", "cv11"; }
+.eyebrow { text-transform: uppercase; font-size: 11px; letter-spacing: .08em; }
+
+/* Barra superior e inferior com brilho */
+.appbar { background: color-mix(in srgb, var(--bg) 72%, transparent); border-bottom-color: color-mix(in srgb, var(--line) 70%, transparent); }
+.tabbar { background: color-mix(in srgb, var(--surface) 80%, transparent); }
+.tabbar a { position: relative; transition: color .2s; }
+.tabbar a[aria-current="page"]::before {
+  content: ""; position: absolute; top: 6px; width: 44px; height: 30px; border-radius: 999px;
+  background: color-mix(in srgb, var(--brand) 14%, transparent); z-index: -1;
+}
+.tabbar a { z-index: 0; }
+.tabbar a .ico { transition: transform .25s var(--ease); }
+.tabbar a:active .ico { transform: scale(.9); }
+
+/* Status com brilho */
+.status { box-shadow: inset 0 1px 0 rgba(255,255,255,.15); }
+.status.live { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ok) 30%, transparent); }
+
+/* Botões e chips */
+.hero-search { transition: box-shadow .2s, transform .15s var(--ease); background: linear-gradient(180deg, var(--surface), color-mix(in srgb, var(--surface) 94%, var(--brand))); }
+.hero-search:hover { box-shadow: 0 10px 30px -12px rgba(31, 79, 224, .35); }
+.hero-search:active { transform: scale(.99); }
+.lchip, .chip, .fchip { transition: transform .15s var(--ease), background .2s, border-color .2s; }
+.lchip:active, .chip:active, .fchip:active { transform: scale(.96); }
+.primary-btn { background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 92%, #fff), var(--brand)); }
+.report-btn { transition: background .2s, transform .15s; }
+.report-btn:active { transform: scale(.94); }
+
+/* Listas de próximos trens */
+.next-row { transition: background .2s; }
+.next-row:hover { background: color-mix(in srgb, var(--surface-2) 60%, transparent); }
+.next-row .badge { box-shadow: 0 2px 8px -3px var(--c); }
+.card-link { transition: background .2s; }
+.card-link:hover { background: var(--surface-2); }
+
+/* Estado vazio e carregamento */
+.empty { background: color-mix(in srgb, var(--surface) 80%, transparent); }
+.skeleton { border-radius: 20px; }
+
+/* Foco visível e seleção */
+::selection { background: color-mix(in srgb, var(--brand) 25%, transparent); }
+:focus-visible { outline-color: var(--brand); }
+
+@media (prefers-reduced-motion: reduce) {
+  .when-now, .next-row.imminent .next-bar, .dep.imminent, .when-now::before { animation: none !important; }
+}

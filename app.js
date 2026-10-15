@@ -398,18 +398,45 @@ function renderInicio() {
   $('#home-fav', el).onclick = () => toggleFav(st);
 }
 
+// Texto do tempo até o trem: "agora", "em 3 min" ou o horário. Atualiza sozinho (ver tickEtas).
+function etaWhen(eta, m) {
+  const diff = eta - m;
+  if (diff < 1) return '<span class="when-now">Chegando</span>';
+  if (diff < 60) return `<span class="when-min">${Math.floor(diff)}<small>min</small></span>`;
+  return `<span class="when-clock">${fmt(eta)}</span>`;
+}
+
+// Atraso em destaque: "+4 min" com o horário previsto por baixo.
+function delayBadge(trip, sched) {
+  if (!trip.delay) return '';
+  return `<span class="delay-badge" title="Previsto ${fmt(sched)}">+${trip.delay} min<small>atrasado</small></span>`;
+}
+
 function nextRow(it, m, st, dt) {
   const diff = it.eta - m;
-  const when = diff < 1 ? 'Agora' : diff < 60 ? `${Math.floor(diff)} min` : fmt(it.eta);
-  const late = it.trip.delay ? `<span class="late-sm">+${it.trip.delay} min</span>` : '';
   const crowd = crowdForecast(it.g.line.id, it.trip.dir, it.sched, st);
-  return `<li class="next-row" style="--c:${it.g.line.color}">
+  const soon = diff < 2 ? ' imminent' : '';
+  return `<li class="next-row${soon}" style="--c:${it.g.line.color}" data-eta="${it.eta}">
     <span class="next-bar"></span>
     <span class="next-main">${badge(it.g.line)}<span class="next-dest">para <b>${esc(it.g.dest)}</b></span></span>
-    <span class="next-when"><b class="${diff < 1 ? 'now' : ''}">${when}</b>${late}</span>
+    <span class="next-when" data-eta-when="${it.eta}"><span class="when-slot">${etaWhen(it.eta, m)}</span>${it.trip.delay ? `<span class="late-sm">+${it.trip.delay} min</span>` : ''}</span>
     ${crowd ? `<span class="next-crowd ${crowd.cls}" title="Lotação prevista">${meter(crowd.level)}</span>` : ''}
   </li>`;
 }
+
+// Atualiza o contador a cada segundo sem redesenhar a tela inteira.
+function tickEtas() {
+  const m = minutesOf(spNow());
+  for (const row of $$('[data-eta-when]')) {
+    const eta = Number(row.dataset.etaWhen);
+    const diff = eta - m;
+    const slot = row.querySelector('.when-slot');
+    if (slot) slot.innerHTML = etaWhen(eta, m);
+    const box = row.closest('[data-eta]');
+    if (box) box.classList.toggle('imminent', diff < 2 && diff >= -0.5);
+  }
+}
+setInterval(tickEtas, 1000);
 
 function toggleFav(st) {
   state.favs = state.favs.includes(st) ? state.favs.filter(n => n !== st) : [...state.favs, st];
@@ -699,17 +726,17 @@ function proximosHtml(st, m, dt) {
     const diff = first.eta - m;
     const dir = first.trip.dir;
     const crowd = crowdForecast(g.line.id, dir, first.sched, st);
-    const hero = diff < 1 ? '<span class="eta-num now">Agora</span>'
-      : diff < 60 ? `<span class="eta-num">${Math.floor(diff)}</span><span class="eta-unit">min</span>`
-        : `<span class="eta-num sm">${fmt(first.eta)}</span>`;
     const car = bestCar(st, g.line.id, dir, 'saida');
     const carLine = car && !car.weak ? `<div class="car-line">${cars(car.zone)}<span>Vagão do <b>${ZONE[car.zone].toLowerCase()}</b> para sair mais perto da saída</span></div>` : '';
-    return `<article class="dep" style="--c:${g.line.color}">
+    return `<article class="dep${diff < 2 ? ' imminent' : ''}" style="--c:${g.line.color}" data-eta="${first.eta}">
       <header class="dep-head">${badge(g.line)}<span class="dep-dir">para <b>${esc(g.dest)}</b></span>
         <button class="report-btn" type="button" data-report="${g.line.id}|${dir}" aria-label="Relatar sobre ${esc(g.line.name)}">${ICON.megaphone}<span>Relatar</span></button></header>
       <div class="dep-hero">
-        <div class="eta">${hero}</div>
-        <div class="dep-meta">${diff < 60 ? `<span class="dep-time">${first.trip.delay ? `<s>${fmt(first.sched)}</s>` : ''}${fmt(first.eta)}</span>` : `<span class="dep-time">${inText(diff)}</span>`}${statusTag(first)}</div>
+        <div class="eta" data-eta-when="${first.eta}"><span class="when-slot">${etaWhen(first.eta, m)}</span></div>
+        <div class="dep-meta">
+          <span class="dep-time">${first.trip.delay ? `<s>${fmt(first.sched)}</s>` : ''}${fmt(first.eta)}</span>
+          ${delayBadge(first.trip, first.sched) || statusTag(first)}
+        </div>
       </div>
       ${crowd ? `<div class="dep-crowd">${crowdChip(crowd)}</div>` : ''}
       ${carLine}
