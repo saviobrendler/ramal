@@ -717,9 +717,18 @@ function renderLinha() {
 
 // ---------- Tela: Estação ----------
 
+// Evento "visita útil" no GoatCounter: uma vez por estação e por carregamento da página.
+const countedStations = new Set();
+function countStationView(name) {
+  if (countedStations.has(name) || !window.goatcounter || !window.goatcounter.count) return;
+  countedStations.add(name);
+  window.goatcounter.count({ path: 'evento/estacao-aberta/' + name, title: 'Estação aberta: ' + name, event: true });
+}
+
 function renderEstacao() {
   const el = $('#v-estacao');
   const st = state.station;
+  countStationView(st);
   const now = spNow(), m = minutesOf(now), dt = dayTypeOf(now);
   const fav = state.favs.includes(st);
   const tabs = [['proximos', 'Próximos trens'], ['horarios', 'Horários'], ['servicos', 'Serviços']];
