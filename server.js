@@ -186,7 +186,7 @@ const types = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
 };
-const PUBLIC = new Set(['/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/gtfs-data.js', '/oficial-data.js',
+const PUBLIC = new Set(['/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/gtfs-data.js', '/oficial-data.js', '/stations-geo.json',
   '/sw.js', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/maskable-512.png', '/icons/icon.svg']);
 
 http.createServer(async (req, res) => {

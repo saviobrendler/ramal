@@ -41,6 +41,17 @@ const ICON = {
   wifiOff: svg('<path d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5-2.8M19 13a10 10 0 0 0-2.4-1.8M2 8.8a15 15 0 0 1 4.3-2.6M22 8.8A15 15 0 0 0 10.7 5"/><circle cx="12" cy="20" r="1"/>'),
   swap: svg('<path d="M7 4v16m0 0-3-3m3 3 3-3M17 20V4m0 0-3 3m3-3 3 3"/>'),
   people2: svg('<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'),
+  pin: svg('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'),
+  locate: svg('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/>'),
+  info: svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'),
+};
+
+// Tipo de serviço por ramal, como a operadora descreve publicamente. A grade trem a trem não é publicada.
+const SERVICE_NOTES = {
+  deodoro: { text: 'Em dias úteis, de madrugada a meio da tarde, o ramal Deodoro opera com trens próprios entre Deodoro e a Central (Deodoro→Central, 5h05–14h52; Central→Deodoro, 4h23–19h36). Fora desse horário, circulam trens paradores de Japeri e Santa Cruz.', src: 'https://trensrj.com.br/pt/operacao-por-ramais' },
+  japeri: { text: 'Este ramal tem trens expressos e paradores. Em avisos oficiais de feriado e de operação especial, expressos e paradores aparecem em horários específicos. A grade trem a trem não é publicada.', src: 'https://www.supervia.com.br/avisos-e-novidades/programacao-dos-trens-durante-o-feriadao-de-tiradentes-e-sao-jorge-18-a-2604/' },
+  santacruz: { text: 'Este ramal tem viagens expressas e paradoras. A operadora publicou mais viagens expressas aqui em anúncios antigos. A grade trem a trem não é publicada.', src: 'https://www.supervia.com.br/pt-br/noticias/mais-viagens-expressas-no-ramal-santa-cruz-e-retorno-das-viagens-paradoras-do-ramal-deodoro' },
+  default: { text: 'Trem parador: para em todas as estações do ramal. A operadora não publica quais viagens são expressas, então não é possível indicar trem a trem.', src: 'https://trensrj.com.br/pt/operacao-por-ramais' },
 };
 
 // As cinco telas da barra. "estacao" e "linha" são detalhes: destacam a aba de onde vieram.
@@ -104,8 +115,8 @@ function parseHash() {
   return { seg: seg || 'inicio', arg: decodeURIComponent(rest.join('/') || ''), params: new URLSearchParams(query) };
 }
 
-const VIEWS = ['inicio', 'rota', 'linhas', 'linha', 'estacao', 'avisos'];
-const NAV_OF = { inicio: 'inicio', rota: 'rota', linhas: 'linhas', linha: 'linhas', estacao: 'inicio', avisos: 'avisos' };
+const VIEWS = ['inicio', 'rota', 'linhas', 'linha', 'estacao', 'avisos', 'mapa'];
+const NAV_OF = { inicio: 'inicio', rota: 'rota', linhas: 'linhas', linha: 'linhas', estacao: 'inicio', avisos: 'avisos', mapa: 'inicio' };
 let lastSeg = null;
 
 function go(hash) { location.hash = hash; }
@@ -140,6 +151,7 @@ function render() {
   if (view === 'linha') renderLinha();
   if (view === 'estacao') renderEstacao();
   if (view === 'avisos') renderAvisos();
+  if (view === 'mapa') renderMapa();
   renderAlertBadge();
 }
 
@@ -387,6 +399,12 @@ function renderInicio() {
     ${alerts.length ? `<section class="block">
       <div class="section-head"><h2>Avisos agora</h2><a href="#/avisos">Ver todos</a></div>
       <div class="alert-list">${alerts.map(alertCard).join('')}</div></section>` : ''}
+
+    <a class="map-teaser" href="#/mapa">
+      <span class="map-teaser-ico">${ICON.pin}</span>
+      <span><b>Mapa ao vivo</b><small>Veja os trens se deslocando e onde você está</small></span>
+      ${ICON.chev}
+    </a>
 
     <section class="block">
       <div class="section-head"><h2>Linhas</h2><a href="#/linhas">Ver todas</a></div>
@@ -660,6 +678,11 @@ function renderLinha() {
         <div class="stat"><b>${sum ? fmt(sum.last) : '—'}</b><span>último</span></div>
       </div>
     </div>
+    <aside class="svc-note">
+      ${ICON.info}
+      <div><b>${esc(serviceNote(line).kind)}</b><p>${esc(serviceNote(line).text)}</p>
+        <a href="${serviceNote(line).src}" target="_blank" rel="noopener">Fonte da informação</a></div>
+    </aside>
     <div class="ctl">
       <div class="seg" role="group" aria-label="Sentido">
         <button type="button" data-ldir="0" aria-pressed="${dir === 0}">Para ${esc(line.to)}</button>
@@ -917,6 +940,225 @@ function fillPunctuality() {
       </div></div>`;
   }).join('');
 }
+
+function serviceNote(line) {
+  const n = SERVICE_NOTES[line.id] || SERVICE_NOTES.default;
+  const kind = line.id === 'deodoro' ? 'Trens próprios e paradores' : line.id === 'japeri' || line.id === 'santacruz' ? 'Expressos e paradores' : 'Trens paradores';
+  return { kind, ...n };
+}
+
+// ---------- Mapa ao vivo ----------
+
+const GEO = { data: null, loading: null };
+const MAP = { map: null, lines: null, trains: null, user: null, route: null, userOn: false, watch: null, pos: null, timer: null, tiles: null, dark: null };
+
+function loadGeo() {
+  if (GEO.data) return Promise.resolve(GEO.data);
+  if (!GEO.loading) GEO.loading = fetch('stations-geo.json', { cache: 'force-cache' })
+    .then(r => r.json()).then(j => (GEO.data = j)).catch(() => (GEO.data = {}));
+  return GEO.loading;
+}
+
+function haversineKm(a, b) {
+  const R = 6371, rad = x => (x * Math.PI) / 180;
+  const dLat = rad(b[0] - a[0]), dLon = rad(b[1] - a[1]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+// Estação da rede mais perto de uma posição (com coordenadas).
+function nearestStation(pos) {
+  let best = null;
+  for (const name of ALL_STATIONS) {
+    const c = GEO.data && GEO.data[name];
+    if (!c) continue;
+    const d = haversineKm(pos, c);
+    if (!best || d < best.d) best = { name, d, c };
+  }
+  return best;
+}
+
+function fmtDist(km) { return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1).replace('.', ',')} km`; }
+
+function renderMapa() {
+  const el = $('#v-mapa');
+  if (!el.dataset.ready) {
+    el.dataset.ready = '1';
+    el.innerHTML = `
+      <h1 class="page-title">Mapa ao vivo</h1>
+      <section class="card where" id="where" aria-live="polite"></section>
+      <div class="map-wrap"><div id="map" class="map" role="region" aria-label="Mapa dos ramais e dos trens"></div>
+        <span class="map-count" id="map-count" aria-live="polite"></span>
+        <div class="map-legend" id="map-legend"></div></div>
+      <section class="card trip-card" id="trip-card"></section>
+      <p class="fineprint">Posição dos trens estimada a partir dos horários. A operadora não publica a posição real dos trens.</p>`;
+    loadGeo().then(() => { initMap(); drawMapLayers(); updateWhere(); drawTrip(); });
+  } else {
+    if (GEO.data) { initMap(); drawMapLayers(); updateWhere(); drawTrip(); }
+  }
+  setTimeout(() => MAP.map && MAP.map.invalidateSize(), 50);
+  if (!MAP.timer) MAP.timer = setInterval(() => { if (parseHash().seg === 'mapa') drawTrains(); }, 5000);
+  drawTrains();
+}
+
+function initMap() {
+  if (MAP.map || !window.L || !$('#map')) return;
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  MAP.map = L.map('map', { zoomControl: false, attributionControl: true }).setView([-22.86, -43.36], 11);
+  L.control.zoom({ position: 'bottomright' }).addTo(MAP.map);
+  // Tiles do OpenStreetMap (uso leve, com atribuição). No modo escuro, o próprio mapa recebe um filtro de cor.
+  MAP.tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(MAP.map);
+  if (dark) MAP.map.getContainer().classList.add('map-dark');
+  MAP.lines = L.layerGroup().addTo(MAP.map);
+  MAP.route = L.layerGroup().addTo(MAP.map);
+  MAP.trains = L.layerGroup().addTo(MAP.map);
+  MAP.user = L.layerGroup().addTo(MAP.map);
+  $('#map-legend').innerHTML = LINES.map(l => `<span class="lg" style="--c:${l.color}"><i></i>${esc(l.name)}</span>`).join('');
+}
+
+function drawMapLayers() {
+  if (!MAP.map) return;
+  MAP.lines.clearLayers();
+  for (const l of LINES) {
+    const pts = l.stops.map(s => GEO.data[s[0]]).filter(Boolean);
+    if (pts.length > 1) L.polyline(pts, { color: l.color, weight: 5, opacity: .85, lineJoin: 'round' }).addTo(MAP.lines);
+    for (const [name] of l.stops) {
+      const c = GEO.data[name];
+      if (!c) continue;
+      L.circleMarker(c, { radius: 4, color: l.color, weight: 2, fillColor: '#fff', fillOpacity: 1 })
+        .bindTooltip(name, { direction: 'top', offset: [0, -4] })
+        .on('click', () => go(`#/estacao/${encodeURIComponent(name)}`))
+        .addTo(MAP.lines);
+    }
+  }
+  MAP.map.fitBounds(L.latLngBounds(LINES.flatMap(l => l.stops.map(s => GEO.data[s[0]])).filter(Boolean)), { padding: [24, 24] });
+}
+
+// Posição de um trem entre duas estações, pela fração do trajeto já percorrida.
+function trainCoords(trip, m) {
+  const p = tripPosition(trip, m);
+  const i = Math.min(Math.floor(p), trip.stops.length - 2);
+  const a = GEO.data[trip.stops[i].name], b = GEO.data[trip.stops[i + 1].name];
+  if (!a || !b) return null;
+  const f = p - i;
+  return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+}
+
+function drawTrains() {
+  if (!MAP.map || !GEO.data) return;
+  const now = spNow(), m = minutesOf(now), dt = dayTypeOf(now);
+  MAP.trains.clearLayers();
+  let n = 0;
+  for (const trip of liveTrips(m, dt)) {
+    const c = trainCoords(trip, m);
+    if (!c) continue;
+    n++;
+    const late = trip.delay ? ' late' : '';
+    const icon = L.divIcon({
+      className: 'map-train-wrap',
+      html: `<div class="map-train${late}" style="--c:${trip.line.color}" title="${esc(trip.line.name)} para ${esc(trip.dest)}">${trip.dir ? '▲' : '▼'}</div>`,
+      iconSize: [26, 26], iconAnchor: [13, 13],
+    });
+    L.marker(c, { icon, title: `${trip.line.name} para ${trip.dest}${trip.delay ? `, ${trip.delay} min de atraso` : ''}` }).addTo(MAP.trains);
+  }
+  const w = $('#where');
+  if (w && MAP.trainsCount !== n) { MAP.trainsCount = n; }
+  const pill = $('#map-count');
+  if (pill) pill.textContent = `${n} ${n === 1 ? 'trem' : 'trens'} em circulação`;
+}
+
+// Cartão "Onde você está" com a estação mais perto e o botão de localização.
+function updateWhere() {
+  const box = $('#where');
+  if (!box) return;
+  if (!MAP.userOn) {
+    box.innerHTML = `<div class="where-row">
+      <span class="where-ico">${ICON.locate}</span>
+      <div><b>Onde você está?</b><p>Use sua localização para ver a estação mais perto e o trajeto até o seu destino.</p></div>
+      <button class="btn primary-btn" id="locate-btn" type="button">Usar minha localização</button>
+    </div>`;
+    $('#locate-btn').onclick = startLocate;
+    return;
+  }
+  if (!MAP.pos) { box.innerHTML = `<div class="where-row"><span class="where-ico">${ICON.locate}</span><div><b>Procurando sua localização…</b><p>Permita o acesso à localização no navegador.</p></div></div>`; return; }
+  const near = nearestStation(MAP.pos);
+  if (!near) { box.innerHTML = `<div class="where-row"><span class="where-ico">${ICON.locate}</span><div><b>Nenhuma estação por perto</b><p>Você está longe da rede de trens.</p></div></div>`; return; }
+  const far = near.d > 3;
+  box.innerHTML = `<div class="where-row">
+    <span class="where-ico live">${ICON.locate}</span>
+    <div><b>${far ? 'Estação mais próxima' : 'Você está perto de'} ${esc(near.name)}</b>
+      <p>${fmtDist(near.d)} de distância${far ? ' · longe da rede' : ''}</p></div>
+    <div class="where-actions">
+      <a class="btn ghost" href="#/estacao/${encodeURIComponent(near.name)}">Próximos trens</a>
+      <button class="btn primary-btn" id="from-here" type="button">Ir daqui</button>
+    </div>
+  </div>`;
+  $('#from-here').onclick = () => {
+    state.plan.from = near.name; store.set('from', near.name);
+    if (!state.plan.to) { /* sem destino, a rota fica para a tela Rotas */ }
+    go('#/rota');
+  };
+}
+
+function startLocate() {
+  if (!navigator.geolocation) return toast('Seu navegador não oferece localização.');
+  MAP.userOn = true;
+  updateWhere();
+  MAP.watch = navigator.geolocation.watchPosition(pos => {
+    MAP.pos = [pos.coords.latitude, pos.coords.longitude];
+    if (MAP.map) {
+      MAP.user.clearLayers();
+      L.circle(MAP.pos, { radius: Math.min(pos.coords.accuracy || 30, 200), color: '#1f4fe0', weight: 1, fillOpacity: .08 }).addTo(MAP.user);
+      L.marker(MAP.pos, { icon: L.divIcon({ className: 'user-dot-wrap', html: '<div class="user-dot"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }) }).addTo(MAP.user);
+    }
+    updateWhere();
+  }, () => {
+    MAP.userOn = false;
+    updateWhere();
+    toast('Não foi possível obter sua localização.');
+  }, { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 });
+}
+
+// Trajeto planejado (origem → destino) desenhado no mapa e listado abaixo.
+function drawTrip() {
+  const box = $('#trip-card');
+  if (!box || !MAP.map) return;
+  MAP.route.clearLayers();
+  const p = state.plan;
+  const from = p.from || (MAP.pos && nearestStation(MAP.pos)?.name) || null;
+  if (!from || !p.to || from === p.to) {
+    box.innerHTML = `<div class="trip-empty">${ICON.route}<div><b>Escolha um destino</b><p>Na tela Rotas, defina o destino. O trajeto aparece aqui no mapa.</p></div>
+      <button class="btn ghost" type="button" data-go="#/rota">Abrir Rotas</button></div>`;
+    $('[data-go]', box)?.addEventListener('click', e => go(e.currentTarget.dataset.go));
+    return;
+  }
+  const now = spNow(), m = minutesOf(now), dt = dayTypeOf(now);
+  const r = plan(from, p.to, m, dt, 1)[0];
+  if (!r) { box.innerHTML = `<div class="trip-empty">${ICON.clock}<div><b>Sem trem agora</b><p>Não há viagem a partir de ${esc(from)}.</p></div></div>`; return; }
+  const bounds = [];
+  r.legs.forEach((leg, k) => {
+    const names = leg.trip.stops.map(s => s.name);
+    const i = names.indexOf(leg.from), j = names.indexOf(leg.to);
+    const pts = names.slice(i, j + 1).map(n => GEO.data[n]).filter(Boolean);
+    if (pts.length > 1) L.polyline(pts, { color: leg.trip.line.color, weight: 9, opacity: .9, lineCap: 'round' }).addTo(MAP.route);
+    pts.forEach(pt => bounds.push(pt));
+    const end = GEO.data[leg.to];
+    if (k < r.legs.length - 1 && end) L.circleMarker(end, { radius: 8, color: '#fff', weight: 3, fillColor: leg.trip.line.color, fillOpacity: 1 }).bindTooltip(`Baldeação em ${leg.to}`).addTo(MAP.route);
+  });
+  const a = GEO.data[from], b = GEO.data[p.to];
+  if (a) L.circleMarker(a, { radius: 9, color: '#fff', weight: 3, fillColor: '#1f4fe0', fillOpacity: 1 }).bindTooltip(`Saída: ${from}`).addTo(MAP.route);
+  if (b) L.circleMarker(b, { radius: 9, color: '#fff', weight: 3, fillColor: '#0a7d44', fillOpacity: 1 }).bindTooltip(`Chegada: ${p.to}`).addTo(MAP.route);
+  if (bounds.length) MAP.map.fitBounds(L.latLngBounds(bounds), { padding: [36, 36], maxZoom: 13 });
+
+  box.innerHTML = `<div class="trip-head"><b>${fmt(r.dep)} → ${fmt(r.arr)}</b><span class="muted small">${dur(r.arr - r.dep)} · ${r.legs.length > 1 ? `${r.legs.length - 1} baldeação` : 'direto'}</span></div>
+    <ol class="trip-steps">${r.legs.map((leg, k) => `
+      ${k ? `<li class="tstep transfer"><span class="tdot"></span><div>Baldeação em <b>${esc(leg.from)}</b> · ${Math.round(leg.dep - r.legs[k - 1].arr)} min de espera</div></li>` : ''}
+      <li class="tstep" style="--c:${leg.trip.line.color}"><span class="tdot"></span><div>${badge(leg.trip.line)} <b>${fmt(leg.dep)}</b> ${esc(leg.from)} → <b>${fmt(leg.arr)}</b> ${esc(leg.to)}</div></li>`).join('')}
+    </ol>`;
+}
+
+// Atualiza o trajeto quando a rota muda em outra tela.
+window.addEventListener('storage', () => { if (parseHash().seg === 'mapa') drawTrip(); });
 
 // ---------- Atualização ----------
 

@@ -11,7 +11,8 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="stylesheet" href="styles.css?v=15">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="">
+  <link rel="stylesheet" href="styles.css?v=20">
 </head>
 <body>
   <a class="skip" href="#main">Pular para o conteúdo</a>
@@ -36,6 +37,7 @@
     <div id="v-linha" class="view" hidden></div>
     <div id="v-estacao" class="view" hidden></div>
     <div id="v-avisos" class="view" hidden></div>
+    <div id="v-mapa" class="view" hidden></div>
     <footer class="foot">Ramal é um projeto independente, sem vínculo com a operadora dos trens nem com o Governo do Estado.</footer>
   </main>
 
@@ -74,11 +76,12 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script src="gtfs-data.js?v=15"></script>
-  <script src="oficial-data.js?v=15"></script>
-  <script src="data.js?v=15"></script>
-  <script src="schedule.js?v=15"></script>
-  <script src="community.js?v=15"></script>
-  <script src="app.js?v=15"></script>
+  <script src="gtfs-data.js?v=16"></script>
+  <script src="oficial-data.js?v=16"></script>
+  <script src="data.js?v=16"></script>
+  <script src="schedule.js?v=16"></script>
+  <script src="community.js?v=16"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin=""></script>
+  <script src="app.js?v=20"></script>
 </body>
 </html>
