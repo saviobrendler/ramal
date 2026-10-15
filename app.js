@@ -1,4 +1,6 @@
-// Ramal — interface.
+// Ramal — interface v2. Cinco telas, sempre a um toque da barra inferior:
+//   Início (busca + próximos trens da sua estação) · Rotas · Linhas · Avisos
+// Telas de detalhe: Estação (Próximos, Horários, Serviços) e Linha.
 
 const $ = (sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
@@ -12,10 +14,11 @@ const store = {
 
 const svg = (d, cls = 'ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 const ICON = {
-  live: svg('<circle cx="12" cy="12" r="2.5"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/>'),
-  plan: svg('<circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5"/>'),
+  home: svg('<path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/>'),
+  route: svg('<circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5"/>'),
   lines: svg('<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/>'),
-  times: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  bell: svg('<path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>'),
+  search: svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
   star: svg('<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'),
   chev: svg('<path d="m9 6 6 6-6 6"/>'),
   chevDown: svg('<path d="m6 9 6 6 6-6"/>', 'ico route-chev'),
@@ -24,15 +27,11 @@ const ICON = {
   clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
   down: svg('<path d="M12 5v14M6 13l6 6 6-6"/>'),
   up: svg('<path d="M12 19V5M6 11l6-6 6 6"/>'),
-  train: svg('<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4M16 21l-2-4"/>'),
-  route: svg('<circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5"/>'),
-  search: svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
-  bell: svg('<path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>'),
-  alert: svg('<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>'),
-  shield: svg('<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="M12 9v4M12 16h.01"/>'),
-  stop: svg('<circle cx="12" cy="12" r="9"/><path d="M9 9v6M15 9v6"/>'),
   megaphone: svg('<path d="M3 10v4h4l6 4V6L7 10z"/><path d="M17 9a4 4 0 0 1 0 6M19.5 6.5a8 8 0 0 1 0 11"/>'),
   check: svg('<path d="m5 12 5 5 9-10"/>'),
+  stop: svg('<circle cx="12" cy="12" r="9"/><path d="M9 9v6M15 9v6"/>'),
+  shield: svg('<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="M12 9v4M12 16h.01"/>'),
+  alert: svg('<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>'),
   people: svg('<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 4a3 3 0 0 1 0 6M21 20a6 6 0 0 0-4-5.6"/>'),
   snow: svg('<path d="M12 2v20M4 7l16 10M20 7 4 17"/>'),
   elevator: svg('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="m9 9 3-3 3 3M9 15l3 3 3-3"/>'),
@@ -40,14 +39,16 @@ const ICON = {
   ramp: svg('<path d="M3 19h18L3 9z"/>'),
   gap: svg('<path d="M3 15h7M14 15h7M10 11v8M14 11v8"/>'),
   wifiOff: svg('<path d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5-2.8M19 13a10 10 0 0 0-2.4-1.8M2 8.8a15 15 0 0 1 4.3-2.6M22 8.8A15 15 0 0 0 10.7 5"/><circle cx="12" cy="20" r="1"/>'),
+  swap: svg('<path d="M7 4v16m0 0-3-3m3 3 3-3M17 20V4m0 0-3 3m3-3 3 3"/>'),
+  people2: svg('<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'),
 };
 
+// As cinco telas da barra. "estacao" e "linha" são detalhes: destacam a aba de onde vieram.
 const TABS = [
-  { id: 'live', label: 'Ao vivo', icon: ICON.live },
-  { id: 'plan', label: 'Planejar', icon: ICON.plan },
-  { id: 'lines', label: 'Ramais', icon: ICON.lines },
-  { id: 'times', label: 'Horários', icon: ICON.times },
-  { id: 'status', label: 'Avisos', icon: ICON.bell },
+  { id: 'inicio', label: 'Início', icon: ICON.home, hash: '#/' },
+  { id: 'rota', label: 'Rotas', icon: ICON.route, hash: '#/rota' },
+  { id: 'linhas', label: 'Linhas', icon: ICON.lines, hash: '#/linhas' },
+  { id: 'avisos', label: 'Avisos', icon: ICON.bell, hash: '#/avisos' },
 ];
 
 const ALL_STATIONS = [...new Set(LINES.flatMap(l => l.stops.map(s => s[0])))].sort((a, b) => a.localeCompare(b, 'pt'));
@@ -55,21 +56,38 @@ const STATION_LINES = new Map(ALL_STATIONS.map(n => [n, LINES.filter(l => l.stop
 const linesAt = name => STATION_LINES.get(name) || [];
 const isStation = name => STATION_LINES.has(name);
 const lineById = id => LINES.find(l => l.id === id);
-
 const badge = line => `<span class="badge" style="--c:${line.color}">${esc(line.name)}</span>`;
 const dots = name => linesAt(name).map(l => `<i style="--c:${l.color}" title="${esc(l.name)}"></i>`).join('');
 const dur = m => { m = Math.round(m); return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`; };
 const inText = d => (d < 1 ? 'agora' : d < 60 ? `em ${Math.floor(d)} min` : `em ${dur(d)}`);
+const DIA_LABEL = { util: 'dias úteis', sab: 'sábado', dom: 'domingo e feriados' };
+const DIA_SHORT = { util: 'Dias úteis', sab: 'Sábado', dom: 'Domingo' };
+const ACESS = [
+  { item: 'elevador', icon: ICON.elevator, name: 'Elevador', yes: 'Funcionando', no: 'Quebrado' },
+  { item: 'escada', icon: ICON.stairs, name: 'Escada rolante', yes: 'Funcionando', no: 'Quebrada' },
+  { item: 'rampa', icon: ICON.ramp, name: 'Rampa de acesso', yes: 'Tem', no: 'Não tem' },
+  { item: 'vao', icon: ICON.gap, name: 'Vão entre trem e plataforma', yes: 'Pequeno', no: 'Grande' },
+];
+const ALERT_KIND = {
+  seguranca: { icon: ICON.shield, cls: 'danger', label: 'Segurança' },
+  paralisacao: { icon: ICON.stop, cls: 'warn', label: 'Circulação' },
+  aviso: { icon: ICON.alert, cls: 'info', label: 'Aviso' },
+};
+const ZONE = { frente: 'Frente', meio: 'Meio', fundo: 'Fundo' };
+
+// ---------- Estado (salvo no aparelho) ----------
 
 const state = {
-  tab: 'live',
   station: isStation(store.get('station', '')) ? store.get('station') : 'Central do Brasil',
-  filter: null,
   favs: store.get('favs', []).filter(isStation),
   recents: store.get('recents', []).filter(isStation),
-  plan: { from: store.get('from', null), to: store.get('to', null), when: 'now', open: 0 },
-  lineId: null,
-  times: { line: LINES[0].id, dir: 0, station: null, day: null },
+  plan: { from: store.get('from', null), to: store.get('to', null), when: 'now', open: -1 },
+  line: null,          // tela de linha
+  lineDir: 0,
+  lineDay: null,
+  stTab: 'proximos',   // aba da tela de estação
+  times: { line: null, dir: 0, day: null, showPast: false },
+  punctDays: 30,
 };
 
 function remember(name) {
@@ -77,36 +95,57 @@ function remember(name) {
   store.set('recents', state.recents);
 }
 
-// ---------- Navegação ----------
+// ---------- Roteamento ----------
 
-for (const nav of $$('[data-nav]')) {
-  nav.innerHTML = TABS.map(t => `<a href="#${t.id}" data-tab="${t.id}">${t.icon}<span>${t.label}</span></a>`).join('');
+function parseHash() {
+  const raw = location.hash.replace(/^#\/?/, '');
+  const [path, query = ''] = raw.split('?');
+  const [seg, ...rest] = path.split('/');
+  return { seg: seg || 'inicio', arg: decodeURIComponent(rest.join('/') || ''), params: new URLSearchParams(query) };
 }
 
-function setTab(tab) {
-  if (!TABS.some(t => t.id === tab)) tab = 'live';
-  const changed = state.tab !== tab;
-  state.tab = tab;
-  $$('[data-tab]').forEach(a => (a.dataset.tab === tab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
-  $$('.view').forEach(v => (v.hidden = v.id !== 'view-' + tab));
-  if (changed) window.scrollTo(0, 0);
+const VIEWS = ['inicio', 'rota', 'linhas', 'linha', 'estacao', 'avisos'];
+const NAV_OF = { inicio: 'inicio', rota: 'rota', linhas: 'linhas', linha: 'linhas', estacao: 'inicio', avisos: 'avisos' };
+let lastSeg = null;
+
+function go(hash) { location.hash = hash; }
+
+function route() {
+  const { seg, arg } = parseHash();
+  const view = VIEWS.includes(seg) ? seg : 'inicio';
+  if (view === 'linha') { const l = lineById(arg); if (!l) return go('#/linhas'); state.line = l.id; }
+  if (view === 'estacao') { if (!isStation(arg)) return go('#/'); state.station = arg; store.set('station', arg); remember(arg); }
+  if (view !== lastSeg) window.scrollTo(0, 0);
+  lastSeg = view;
+  for (const v of VIEWS) $(`#v-${v}`).hidden = v !== view;
+  $$('[data-tab]').forEach(a => {
+    const on = a.dataset.tab === NAV_OF[view];
+    on ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current');
+  });
   render();
 }
-window.addEventListener('hashchange', () => setTab(location.hash.slice(1)));
+window.addEventListener('hashchange', route);
+
+for (const nav of $$('[data-nav]')) {
+  nav.innerHTML = TABS.map(t => `<a href="${t.hash}" data-tab="${t.id}">${t.icon}<span>${t.label}</span></a>`).join('');
+}
 
 function render() {
   renderStatus();
-  if (state.tab === 'live') renderLive();
-  if (state.tab === 'plan') renderPlan();
-  if (state.tab === 'lines') renderLines();
-  if (state.tab === 'times') renderTimes();
-  if (state.tab === 'status') renderStatusView();
+  const { seg, arg } = parseHash();
+  const view = VIEWS.includes(seg) ? seg : 'inicio';
+  if (view === 'inicio') renderInicio();
+  if (view === 'rota') renderRota();
+  if (view === 'linhas') renderLinhas();
+  if (view === 'linha') renderLinha();
+  if (view === 'estacao') renderEstacao();
+  if (view === 'avisos') renderAvisos();
   renderAlertBadge();
 }
 
 function renderAlertBadge() {
   const n = (COMM.overview?.alerts || []).length;
-  $$('[data-tab="status"]').forEach(a => {
+  $$('[data-tab="avisos"]').forEach(a => {
     let b = $('.tab-badge', a);
     if (!n) { b && b.remove(); return; }
     if (!b) { b = document.createElement('span'); b.className = 'tab-badge'; a.appendChild(b); }
@@ -114,7 +153,48 @@ function renderAlertBadge() {
   });
 }
 
-// ---------- Folha de ações e aviso rápido ----------
+// ---------- Status dos dados ----------
+
+function dataStatus() {
+  if (!navigator.onLine) return { cls: 'plain', text: 'Offline' };
+  if (REALTIME.active) return { cls: 'live', text: 'Ao vivo' };
+  if (DATA_MODE === 'gtfs') return { cls: 'plain', text: 'Programado' };
+  return { cls: '', text: 'Horários oficiais' };
+}
+
+function renderStatus() {
+  const s = dataStatus();
+  $('#status').className = 'status ' + s.cls;
+  $('#status-text').textContent = s.text;
+}
+
+$('#status').addEventListener('click', () => {
+  const rows = [];
+  if (!navigator.onLine) rows.push(['plain', 'Você está sem internet', 'Horários e rotas continuam funcionando. Relatos ficam guardados e são enviados depois.']);
+  if (window.OFICIAL) rows.push(['ok', 'Estações e primeiro/último trem', `Vêm do site da TrensRJ (coletados em ${new Date(window.OFICIAL.coletadoEm).toLocaleDateString('pt-BR')}).`]);
+  rows.push(REALTIME.active
+    ? ['ok', 'Tempo real ativo', `${REALTIME.source ? esc(REALTIME.source) + '. ' : ''}Atualizado às ${new Date(REALTIME.updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`]
+    : ['plain', 'Sem tempo real', 'A operadora não publica posição dos trens. Os intervalos entre trens são estimados.']);
+  rows.push(['plain', 'Relatos de passageiros', 'Lotação, vagão, acessibilidade e atrasos vêm de relatos anônimos feitos no próprio app.']);
+  $('#info-body').innerHTML = rows.map(([c, t, d]) => `<div class="info-row ${c}"><span class="status-dot"></span><div><b>${t}</b>${d}</div></div>`).join('') +
+    '<p>Ramal é um projeto independente, sem vínculo com a operadora dos trens nem com o Governo do Estado.</p>';
+  $('#info').showModal();
+});
+
+// ---------- Folhas e aviso rápido ----------
+
+for (const d of $$('dialog')) {
+  d.addEventListener('click', e => { if (e.target === d || e.target.closest('[data-close]')) d.close(); });
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (t.hidden = true), 3200);
+}
 
 let actionHandler = null;
 function openAction(title, html, onAction) {
@@ -131,71 +211,7 @@ $('#action-body').addEventListener('click', async e => {
   b.disabled = false;
 });
 
-let toastTimer;
-function toast(msg) {
-  const t = $('#toast');
-  t.textContent = msg;
-  t.hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (t.hidden = true), 3200);
-}
-
-async function submit(report, okMsg = 'Obrigado! Seu relato ajuda outros passageiros.') {
-  const r = await sendReport(report);
-  $('#action').close();
-  if (!r.ok) return toast(r.error);
-  toast(r.queued ? 'Sem internet: o relato será enviado quando a conexão voltar.' : okMsg);
-  if (!r.queued) { await loadStation(report.station, dayTypeOf(spNow()), true); render(); }
-}
-
-// ---------- Status dos dados ----------
-
-function dataStatus() {
-  if (!navigator.onLine) return { cls: 'plain', text: 'Offline' };
-  if (REALTIME.active) return { cls: 'live', text: 'Ao vivo' };
-  if (DATA_MODE === 'gtfs') return { cls: 'plain', text: 'Programado' };
-  return { cls: '', text: 'Demonstração' };
-}
-
-function renderStatus() {
-  const s = dataStatus();
-  $('#status').className = 'status ' + s.cls;
-  $('#status-text').textContent = s.text;
-}
-
-$('#status').addEventListener('click', () => {
-  const rows = [];
-  if (DATA_MODE === 'gtfs') {
-    const g = window.GTFS_DATA;
-    rows.push(['ok', 'Horários oficiais', `Fonte: ${esc(g.source)}. Importado em ${new Date(g.generatedAt).toLocaleDateString('pt-BR')}.`]);
-  } else if (window.OFICIAL) {
-    rows.push(['ok', 'Estações e horários de início e fim oficiais', `Ramais, estações, funcionamento, serviços e primeiro/último trem vêm do site da TrensRJ (coletados em ${new Date(window.OFICIAL.coletadoEm).toLocaleDateString('pt-BR')}).`]);
-    rows.push(['warn', 'Partidas trem a trem estimadas', 'A operadora não publica a grade completa. Os intervalos entre trens são estimados e os atrasos são simulados.']);
-  } else {
-    rows.push(['warn', 'Horários de demonstração', 'Estações, tempos e intervalos são aproximados. Não use para decidir uma viagem real.']);
-  }
-  rows.push(REALTIME.active
-    ? ['ok', 'Tempo real ativo', `${REALTIME.source ? esc(REALTIME.source) + '. ' : ''}Atualizado às ${new Date(REALTIME.updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`]
-    : DATA_MODE === 'gtfs'
-      ? ['plain', 'Sem tempo real', 'Os horários mostrados são os programados.']
-      : ['warn', 'Atrasos simulados', 'Os atrasos exibidos são gerados apenas para demonstrar a tela.']);
-  if (!navigator.onLine) {
-    const q = queueGet().length;
-    rows.unshift(['plain', 'Você está sem internet', `Horários, rotas e o último estado dos avisos continuam funcionando.${q ? ` ${q} ${q === 1 ? 'relato será enviado' : 'relatos serão enviados'} quando a conexão voltar.` : ''}`]);
-  }
-  rows.push(['plain', 'Relatos de passageiros', 'Lotação, vagão certo, acessibilidade e pontualidade vêm de relatos anônimos enviados no Ramal.']);
-  $('#info-body').innerHTML = rows.map(([c, t, d]) =>
-    `<div class="info-row ${c}"><span class="status-dot"></span><div><b>${t}</b>${d}</div></div>`).join('') +
-    '<p>Ramal é um projeto independente, sem vínculo com a operadora dos trens nem com o Governo do Estado.</p>';
-  $('#info').showModal();
-});
-
-// ---------- Folhas (diálogos) ----------
-
-for (const d of $$('dialog')) {
-  d.addEventListener('click', e => { if (e.target === d || e.target.closest('[data-close]')) d.close(); });
-}
-
+// Escolha de estação (usada no início, na rota e na busca).
 const picker = $('#picker');
 let onPick = null;
 
@@ -205,7 +221,6 @@ function openPicker(title, cb) {
   $('#picker-q').value = '';
   renderPicker();
   picker.showModal();
-  $('#picker-list').scrollTop = 0;
   if (matchMedia('(pointer: fine)').matches) $('#picker-q').focus();
 }
 
@@ -256,177 +271,26 @@ $('#picker-list').addEventListener('click', e => {
   onPick && onPick(name);
 });
 
-// ---------- Ao vivo ----------
-
-function setStation(name) {
-  state.station = name;
-  state.filter = null;
-  store.set('station', name);
-  remember(name);
-  renderLive();
+async function submit(report, okMsg = 'Obrigado! Seu relato ajuda outros passageiros.') {
+  const r = await sendReport(report);
+  $('#action').close();
+  if (!r.ok) return toast(r.error);
+  toast(r.queued ? 'Sem internet: o relato será enviado quando a conexão voltar.' : okMsg);
+  if (!r.queued) { await loadStation(report.station, dayTypeOf(spNow()), true); render(); }
 }
 
-$('#live-pick').addEventListener('click', () => openPicker('Escolher estação', setStation));
-$('#live-fav').addEventListener('click', () => {
-  const s = state.station;
-  state.favs = state.favs.includes(s) ? state.favs.filter(n => n !== s) : [...state.favs, s];
-  store.set('favs', state.favs);
-  renderLive();
-});
-$('#live-quick').addEventListener('click', e => { const b = e.target.closest('[data-st]'); if (b) setStation(b.dataset.st); });
-$('#live-filter').addEventListener('click', e => {
-  const b = e.target.closest('[data-f]');
-  if (b) { state.filter = b.dataset.f || null; renderLive(); }
-});
-
-function statusTag(it) {
-  if (it.trip.delay) return `<span class="tag late">${it.trip.rt ? '' : ''}+${it.trip.delay} min</span>`;
-  if (it.trip.rt || DATA_MODE === 'simulado') return '<span class="tag ok">No horário</span>';
-  return '<span class="tag plain">Programado</span>';
+// Relatar: primeiro escolhe a linha e o sentido na estação; depois o tipo de relato.
+function openReportPicker(station) {
+  const opts = linesAt(station).flatMap(l => arrivingDirs(l, station).map(d => ({ l, d })));
+  if (!opts.length) return toast('Nenhum ramal para relatar nesta estação.');
+  openAction(`Relatar em ${station}`, `
+    <p class="action-sub">Escolha o trem que você viu</p>
+    ${opts.map(({ l, d }) => `<button class="action-row" type="button" data-act="${l.id}|${d}">${badge(l)}<span><b>para ${esc(destOf(l, d))}</b></span></button>`).join('')}`,
+  async act => { const [id, d] = act.split('|'); $('#action').close(); openReport(lineById(id), Number(d), station); });
 }
 
-function depCard(g, m) {
-  const [first, ...rest] = g.items;
-  const diff = first.eta - m;
-  const hero = diff < 1 ? '<span class="eta-num now">Agora</span>'
-    : diff < 60 ? `<span class="eta-num">${Math.floor(diff)}</span><span class="eta-unit">min</span>`
-      : `<span class="eta-num sm">${fmt(first.eta)}</span>`;
-  const time = `${first.trip.delay ? `<s>${fmt(first.sched)}</s>` : ''}${fmt(first.eta)}`;
-  const label = `${g.line.name}, sentido ${g.dest}: próximo trem ${diff < 1 ? 'chegando agora' : inText(diff)}, às ${fmt(first.eta)}`;
-  const dir = first.trip.dir;
-  const crowd = crowdForecast(g.line.id, dir, first.sched, state.station);
-  return `<article class="dep" style="--c:${g.line.color}" aria-label="${esc(label)}">
-    <header class="dep-head">${badge(g.line)}<span class="dep-dir">para <b>${esc(g.dest)}</b></span>
-      <button class="report-btn" type="button" data-report="${g.line.id}|${dir}" aria-label="Relatar sobre ${esc(g.line.name)} para ${esc(g.dest)}">${ICON.megaphone}<span>Relatar</span></button></header>
-    <div class="dep-hero">
-      <div class="eta">${hero}</div>
-      <div class="dep-meta">${diff < 60 ? `<span class="dep-time">${time}</span>` : `<span class="dep-time">${inText(diff)}</span>`}${statusTag(first)}</div>
-    </div>
-    ${crowd ? `<div class="dep-crowd">${crowdChip(crowd)}</div>` : ''}
-    ${rest.length ? `<ol class="dep-next" aria-label="Trens seguintes">${rest.map(it => `<li>
-      <time class="${it.trip.delay ? 'late-sm' : ''}" title="${it.trip.delay ? `Previsto ${fmt(it.sched)}, atraso de ${it.trip.delay} min` : ''}">${fmt(it.eta)}</time><span class="in">${inText(it.eta - m).replace('em ', '')}</span></li>`).join('')}</ol>` : ''}
-  </article>`;
-}
-
-function renderLive() {
-  const now = spNow(), m = minutesOf(now), dt = dayTypeOf(now), st = state.station;
-  $('#live-name').textContent = st;
-  $('#live-dots').innerHTML = dots(st);
-  const fav = state.favs.includes(st);
-  const favBtn = $('#live-fav');
-  favBtn.setAttribute('aria-pressed', fav);
-  favBtn.setAttribute('aria-label', fav ? 'Remover dos favoritos' : 'Favoritar estação');
-  favBtn.innerHTML = ICON.star;
-
-  const quick = [...state.favs, ...state.recents].filter((n, i, a) => a.indexOf(n) === i && n !== st).slice(0, 8);
-  $('#live-quick').innerHTML = quick.map(n => `<button class="chip" type="button" data-st="${esc(n)}">${state.favs.includes(n) ? ICON.star : ''}${esc(n)}</button>`).join('');
-
-  const lines = linesAt(st);
-  if (state.filter && !lines.some(l => l.id === state.filter)) state.filter = null;
-  $('#live-filter').innerHTML = lines.length > 1
-    ? [`<button class="fchip" type="button" data-f="" aria-pressed="${!state.filter}">Todos</button>`,
-      ...lines.map(l => `<button class="fchip" type="button" style="--c:${l.color}" data-f="${l.id}" aria-pressed="${state.filter === l.id}"><i></i>${esc(l.name)}</button>`)].join('')
-    : '';
-
-  let groups = departures(st, m, dt, 6);
-  if (state.filter) groups = groups.filter(g => g.line.id === state.filter);
-  $('#live-board').innerHTML = groups.length
-    ? groups.map(g => depCard(g, m)).join('')
-    : `<div class="empty">${ICON.clock}<b>Sem mais trens hoje</b>A operação nesta estação terminou. Os horários de amanhã aparecem a partir da madrugada.</div>`;
-  $('#live-updated').textContent = `Atualizado às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · atualiza sozinho`;
-
-  $('#live-alerts').innerHTML = alertsFor({ lines: lines.map(l => l.id), stations: [st] }).map(alertCard).join('');
-  renderStationExtras(st, lines);
-  renderOfficial(st, dt);
-  loadStation(st, dt).then(fresh => { if (fresh && state.tab === 'live' && state.station === st) renderLive(); });
-}
-
-// ---------- Avisos, vagão certo, acessibilidade, relatos ----------
-
-const ALERT_KIND = {
-  seguranca: { icon: ICON.shield, cls: 'danger', label: 'Segurança' },
-  paralisacao: { icon: ICON.stop, cls: 'warn', label: 'Circulação' },
-  aviso: { icon: ICON.alert, cls: 'info', label: 'Aviso' },
-};
-const ago = iso => {
-  if (!iso) return '';
-  const min = Math.round((Date.now() - Date.parse(iso)) / 60e3);
-  return min < 1 ? 'agora' : min < 60 ? `há ${min} min` : min < 1440 ? `há ${Math.floor(min / 60)} h` : `há ${Math.floor(min / 1440)} d`;
-};
-
-function alertCard(a) {
-  const k = ALERT_KIND[a.kind] || ALERT_KIND.aviso;
-  const lines = (a.lines || []).map(lineById).filter(Boolean);
-  return `<article class="alert ${k.cls}">
-    <span class="alert-ico">${k.icon}</span>
-    <div><b>${esc(a.title)}</b><p>${esc(a.detail || '')}</p>
-      <span class="alert-meta">${lines.map(badge).join('')}<span>${esc(a.source || '')}${a.at ? ` · ${ago(a.at)}` : ''}</span></span></div>
-  </article>`;
-}
-
-const ACESS = [
-  { item: 'elevador', icon: ICON.elevator, name: 'Elevador', yes: 'Funcionando', no: 'Quebrado' },
-  { item: 'escada', icon: ICON.stairs, name: 'Escada rolante', yes: 'Funcionando', no: 'Quebrada' },
-  { item: 'rampa', icon: ICON.ramp, name: 'Rampa de acesso', yes: 'Tem', no: 'Não tem' },
-  { item: 'vao', icon: ICON.gap, name: 'Vão entre trem e plataforma', yes: 'Pequeno', no: 'Grande' },
-];
-
-function renderStationExtras(st, lines) {
-  const data = COMM.stations.get(st);
-
-  // Vagão certo
-  const rows = [];
-  for (const l of lines) {
-    for (const d of arrivingDirs(l, st)) {
-      const b = bestCar(st, l.id, d, 'saida');
-      const result = !b ? '<span class="muted">Ainda sem votos</span>'
-        : b.weak ? `<span class="muted">Poucos votos (${b.total})</span>`
-          : `${cars(b.zone)}<span><b>${ZONE_LABEL[b.zone]}</b> <span class="muted">· ${b.pct}% de ${b.total}</span></span>`;
-      rows.push(`<button class="row-btn" type="button" data-vote="${l.id}|${d}">
-        ${badge(l)}<span class="row-main">trens para <b>${esc(destOf(l, d))}</b></span><span class="row-side">${result}</span></button>`);
-    }
-  }
-  $('#vagao-rows').innerHTML = rows.join('') + '<p class="panel-foot">Frente = primeiro vagão no sentido da viagem. Toque numa linha para votar.</p>';
-
-  // Acessibilidade
-  // Oficial: a operadora lista quais estações têm elevador; não informa se estão funcionando.
-  const off = officialStation(st);
-  $('#acess-rows').innerHTML = ACESS.map(a => {
-    const s = data?.acess?.[a.item];
-    if (!s && a.item === 'elevador' && off) {
-      const has = off.servicos.includes('Elevador');
-      return `<button class="row-btn" type="button" data-acess="${a.item}"><span class="row-ico">${a.icon}</span><span class="row-main">${a.name}</span><span class="row-side col">${has
-        ? '<span class="pill-status ok">Tem (oficial)</span><span class="muted small">não informa se funciona</span>'
-        : '<span class="muted">Não consta na lista oficial</span>'}</span></button>`;
-    }
-    if (!s && a.item === 'escada' && off) {
-      return `<button class="row-btn" type="button" data-acess="${a.item}"><span class="row-ico">${a.icon}</span><span class="row-main">${a.name}</span><span class="row-side col"><span class="muted">Não consta na lista oficial</span></span></button>`;
-    }
-    const val = !s ? '<span class="muted">Sem informação</span>'
-      : `<span class="pill-status ${s.ok ? 'ok' : 'bad'}">${s.ok ? a.yes : a.no}</span><span class="muted small">${s.n} ${s.n === 1 ? 'relato' : 'relatos'} · ${ago(new Date(s.at).toISOString())}</span>`;
-    return `<button class="row-btn" type="button" data-acess="${a.item}"><span class="row-ico">${a.icon}</span><span class="row-main">${a.name}</span><span class="row-side col">${val}</span></button>`;
-  }).join('');
-
-  // Relatos recentes
-  const recent = data?.recent || [];
-  $('#recent-rows').innerHTML = recent.length ? recent.map(r => {
-    const l = lineById(r.line);
-    const what = r.type === 'lotacao' ? `${ICON.people}${CROWD_NOW[r.value] || 'Lotação'}`
-      : r.type === 'passou' ? `${ICON.check}Trem passou${r.value > 1 ? ` · +${Math.round(r.value)} min` : ''}`
-        : r.type === 'parado' ? `${ICON.stop}Trem parado` : `${ICON.snow}Ar-condicionado quebrado`;
-    return `<div class="feed-row"><span class="feed-what">${what}</span>${l ? badge(l) : ''}<span class="muted small">${r.ago < 1 ? 'agora' : `há ${r.ago} min`}</span></div>`;
-  }).join('') : `<p class="panel-empty">Nenhum relato na última hora. Use <b>Relatar</b> num cartão de trem para avisar outros passageiros.</p>`;
-}
-
-$('#live-board').addEventListener('click', e => {
-  const b = e.target.closest('[data-report]');
-  if (!b) return;
-  const [lineId, dir] = b.dataset.report.split('|');
-  openReport(lineById(lineId), Number(dir));
-});
-
-function openReport(line, dir) {
-  const st = state.station;
+function openReport(line, dir, station) {
+  const st = station || state.station;
   openAction(`${line.name} para ${destOf(line, dir)}`, `
     <p class="action-sub">Em ${esc(st)}, agora</p>
     <button class="action-row" type="button" data-act="passou">${ICON.check}<span><b>O trem passou agora</b><small>Ajuda a medir atrasos</small></span></button>
@@ -447,102 +311,197 @@ function openReport(line, dir) {
   });
 }
 
-$('#vagao-rows').addEventListener('click', e => {
-  const b = e.target.closest('[data-vote]');
-  if (!b) return;
-  const [lineId, dir] = b.dataset.vote.split('|');
-  const line = lineById(lineId), st = state.station;
-  let goal = 'saida';
-  openAction('Qual o melhor vagão?', `
-    <p class="action-sub">${badge(line)} trens para ${esc(destOf(line, Number(dir)))}, em ${esc(st)}</p>
-    <div class="seg" role="group" aria-label="Objetivo">
-      <button type="button" data-act="goal-saida" aria-pressed="true">Para sair da estação</button>
-      <button type="button" data-act="goal-baldeacao" aria-pressed="false">Para fazer baldeação</button>
+// ---------- Horários e rotas (helpers) ----------
+
+// Primeiro e último trem oficiais desta estação para o destino, no tipo de dia.
+function officialLine(station, dest, dayType) {
+  const st = officialStation(station);
+  if (!st) return null;
+  const rows = st.trens.filter(t => t.para === dest && t.dia === dayType);
+  return rows.length ? { first: rows.map(r => r.primeiro).sort()[0], last: rows.map(r => r.ultimo).sort().at(-1) } : null;
+}
+
+function statusTag(it) {
+  if (it.trip.delay) return `<span class="tag late">+${it.trip.delay} min</span>`;
+  if (it.trip.rt || DATA_MODE === 'simulado') return '<span class="tag ok">No horário</span>';
+  return '<span class="tag plain">Programado</span>';
+}
+
+function lineSummary(line, dt) {
+  const deps = tripsFor(dt).filter(t => t.line === line && t.dir === 0).map(t => t.stops[0].time).sort((a, b) => a - b);
+  if (!deps.length) return null;
+  return { first: deps[0], last: deps[deps.length - 1], count: deps.length };
+}
+
+function alertsFor2({ lines = [], stations = [] }) {
+  return (COMM.overview?.alerts || []).filter(a =>
+    (a.stations || []).some(s => stations.includes(s)) || (a.lines || []).some(l => lines.includes(l)));
+}
+
+const ago = iso => {
+  if (!iso) return '';
+  const min = Math.round((Date.now() - Date.parse(iso)) / 60e3);
+  return min < 1 ? 'agora' : min < 60 ? `há ${min} min` : min < 1440 ? `há ${Math.floor(min / 60)} h` : `há ${Math.floor(min / 1440)} d`;
+};
+
+function alertCard(a) {
+  const k = ALERT_KIND[a.kind] || ALERT_KIND.aviso;
+  const lines = (a.lines || []).map(lineById).filter(Boolean);
+  return `<article class="alert ${k.cls}">
+    <span class="alert-ico">${k.icon}</span>
+    <div><b>${esc(a.title)}</b><p>${esc(a.detail || '')}</p>
+      <span class="alert-meta">${lines.map(badge).join('')}<span>${esc(a.source || '')}${a.at ? ` · ${ago(a.at)}` : ''}</span></span></div>
+  </article>`;
+}
+
+// ---------- Tela: Início ----------
+
+function renderInicio() {
+  const el = $('#v-inicio');
+  const now = spNow(), m = minutesOf(now), dt = dayTypeOf(now);
+  const st = state.station;
+  const next = departures(st, m, dt, 4)
+    .flatMap(g => g.items.map(it => ({ ...it, g })))
+    .sort((a, b) => a.eta - b.eta).slice(0, 5);
+  const alerts = (COMM.overview?.alerts || []).slice(0, 2);
+  const fav = state.favs.includes(st);
+
+  el.innerHTML = `
+    <h1 class="sr-only">Início</h1>
+    <button class="hero-search" id="go-rota" type="button">${ICON.search}<span>Para onde você vai?</span></button>
+
+    <section class="card station-card" aria-labelledby="st-title">
+      <div class="station-card-head">
+        <button class="station-pick" id="home-pick" type="button" aria-haspopup="dialog">
+          <span class="eyebrow">Sua estação</span>
+          <span class="station-name">${esc(st)}</span>
+          <span class="dots">${dots(st)}</span>
+        </button>
+        <button class="icon-btn" id="home-fav" type="button" aria-pressed="${fav}" aria-label="${fav ? 'Remover dos favoritos' : 'Salvar como favorita'}">${fav ? ICON.star : ICON.star}</button>
+      </div>
+      ${next.length ? `<ol class="next-list">${next.map(it => nextRow(it, m, st, dt)).join('')}</ol>`
+        : `<div class="empty-inline">${ICON.clock}<span>Sem mais trens hoje nesta estação.</span></div>`}
+      <a class="card-link" href="#/estacao/${encodeURIComponent(st)}">Ver tudo desta estação ${ICON.chev}</a>
+    </section>
+
+    ${alerts.length ? `<section class="block">
+      <div class="section-head"><h2>Avisos agora</h2><a href="#/avisos">Ver todos</a></div>
+      <div class="alert-list">${alerts.map(alertCard).join('')}</div></section>` : ''}
+
+    <section class="block">
+      <div class="section-head"><h2>Linhas</h2><a href="#/linhas">Ver todas</a></div>
+      <div class="chips-scroll">${LINES.map(l => `<a class="lchip" href="#/linha/${l.id}" style="--c:${l.color}"><i></i>${esc(l.name)}</a>`).join('')}</div>
+    </section>`;
+
+  $('#go-rota', el).onclick = () => go('#/rota');
+  $('#home-pick', el).onclick = () => openPicker('Sua estação', n => { state.station = n; store.set('station', n); remember(n); renderInicio(); });
+  $('#home-fav', el).onclick = () => toggleFav(st);
+}
+
+function nextRow(it, m, st, dt) {
+  const diff = it.eta - m;
+  const when = diff < 1 ? 'Agora' : diff < 60 ? `${Math.floor(diff)} min` : fmt(it.eta);
+  const late = it.trip.delay ? `<span class="late-sm">+${it.trip.delay} min</span>` : '';
+  const crowd = crowdForecast(it.g.line.id, it.trip.dir, it.sched, st);
+  return `<li class="next-row" style="--c:${it.g.line.color}">
+    <span class="next-bar"></span>
+    <span class="next-main">${badge(it.g.line)}<span class="next-dest">para <b>${esc(it.g.dest)}</b></span></span>
+    <span class="next-when"><b class="${diff < 1 ? 'now' : ''}">${when}</b>${late}</span>
+    ${crowd ? `<span class="next-crowd ${crowd.cls}" title="Lotação prevista">${meter(crowd.level)}</span>` : ''}
+  </li>`;
+}
+
+function toggleFav(st) {
+  state.favs = state.favs.includes(st) ? state.favs.filter(n => n !== st) : [...state.favs, st];
+  store.set('favs', state.favs);
+  render();
+}
+
+// ---------- Tela: Rotas ----------
+
+function renderRota() {
+  const el = $('#v-rota');
+  const p = state.plan;
+  el.innerHTML = `
+    <h1 class="page-title">Rotas</h1>
+    <div class="planner card">
+      <div class="od">
+        <div class="od-rail" aria-hidden="true"><i class="od-dot"></i><i class="od-line"></i><i class="od-dot end"></i></div>
+        <div class="od-fields">
+          <button class="od-field" id="plan-from" type="button" aria-haspopup="dialog"><span class="eyebrow">De</span><span class="od-val"></span></button>
+          <button class="od-field" id="plan-to" type="button" aria-haspopup="dialog"><span class="eyebrow">Para</span><span class="od-val"></span></button>
+        </div>
+        <button class="icon-btn swap" id="plan-swap" type="button" aria-label="Inverter origem e destino">${ICON.swap}</button>
+      </div>
+      <div class="when">
+        <div class="seg" role="group" aria-label="Quando">
+          <button type="button" data-when="now" aria-pressed="${p.when === 'now'}">Sair agora</button>
+          <button type="button" data-when="at" aria-pressed="${p.when === 'at'}">Escolher horário</button>
+        </div>
+        <div class="when-at" id="plan-at" ${p.when === 'at' ? '' : 'hidden'}>
+          <label class="input"><span class="eyebrow">Data</span><input id="plan-date" type="date"></label>
+          <label class="input"><span class="eyebrow">Horário</span><input id="plan-time" type="time"></label>
+        </div>
+      </div>
     </div>
-    <div class="zone-pick">${['fundo', 'meio', 'frente'].map(z => `<button type="button" data-act="z-${z}">${cars(z)}<span>${ZONE_LABEL[z]}</span></button>`).join('')}</div>
-    <p class="panel-foot">A seta indica o sentido do trem. Frente é o primeiro vagão.</p>`,
-  async (act, btn) => {
-    if (act.startsWith('goal-')) {
-      goal = act.slice(5);
-      $$('[data-act^="goal-"]', $('#action-body')).forEach(x => x.setAttribute('aria-pressed', x === btn));
-      return;
+    <div id="plan-results" class="results" aria-live="polite"></div>`;
+
+  const setVal = (id, v, ph) => {
+    const box = $(`#${id} .od-val`, el);
+    box.textContent = v || ph;
+    box.classList.toggle('placeholder', !v);
+  };
+  setVal('plan-from', p.from, 'Escolha a origem');
+  setVal('plan-to', p.to, 'Escolha o destino');
+
+  $('#plan-from', el).onclick = () => openPicker('De onde você sai?', n => setOD('from', n));
+  $('#plan-to', el).onclick = () => openPicker('Para onde você vai?', n => setOD('to', n));
+  $('#plan-swap', el).onclick = () => {
+    [p.from, p.to] = [p.to, p.from];
+    store.set('from', p.from); store.set('to', p.to);
+    p.open = -1;
+    renderRota();
+  };
+  $$('[data-when]', el).forEach(b => b.onclick = () => {
+    p.when = b.dataset.when;
+    if (p.when === 'at' && !$('#plan-time', el).value) {
+      const now = spNow();
+      $('#plan-date', el).value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      $('#plan-time', el).value = fmt(minutesOf(now));
     }
-    return submit({ type: 'vagao', station: st, line: lineId, dir: Number(dir), goal, value: act.slice(2) }, 'Voto registrado. Obrigado!');
+    renderRota();
   });
-});
-
-$('#acess-rows').addEventListener('click', e => {
-  const b = e.target.closest('[data-acess]');
-  if (!b) return;
-  const a = ACESS.find(x => x.item === b.dataset.acess);
-  openAction(a.name, `
-    <p class="action-sub">Em ${esc(state.station)}, como está agora?</p>
-    <div class="two-pick">
-      <button type="button" data-act="yes" class="ok">${ICON.check}${a.yes}</button>
-      <button type="button" data-act="no" class="bad">${ICON.alert}${a.no}</button>
-    </div>`,
-  act => submit({ type: 'acess', station: state.station, item: a.item, value: act === 'yes' }));
-});
-
-// ---------- Planejar ----------
+  $('#plan-date', el)?.addEventListener('change', renderPlanResults);
+  $('#plan-time', el)?.addEventListener('change', renderPlanResults);
+  $('#plan-results', el).addEventListener('click', e => {
+    const b = e.target.closest('[data-route]');
+    if (!b) return;
+    const i = Number(b.dataset.route);
+    p.open = p.open === i ? -1 : i;
+    renderPlanResults();
+  });
+  renderPlanResults();
+}
 
 function setOD(key, name) {
   state.plan[key] = name;
   store.set(key, name);
-  state.plan.open = 0;
-  renderPlan();
+  state.plan.open = -1;
+  renderRota();
 }
 
-$('#plan-from').addEventListener('click', () => openPicker('De onde você sai?', n => setOD('from', n)));
-$('#plan-to').addEventListener('click', () => openPicker('Para onde você vai?', n => setOD('to', n)));
-$('#plan-swap').addEventListener('click', () => {
+function renderPlanResults() {
   const p = state.plan;
-  [p.from, p.to] = [p.to, p.from];
-  store.set('from', p.from); store.set('to', p.to);
-  p.open = 0;
-  renderPlan();
-});
-$$('[data-when]').forEach(b => b.addEventListener('click', () => {
-  state.plan.when = b.dataset.when;
-  if (state.plan.when === 'at' && !$('#plan-time').value) {
-    const now = spNow();
-    $('#plan-date').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    $('#plan-time').value = fmt(minutesOf(now));
-  }
-  renderPlan();
-}));
-$('#plan-date').addEventListener('change', renderPlan);
-$('#plan-time').addEventListener('change', renderPlan);
-$('#plan-results').addEventListener('click', e => {
-  const b = e.target.closest('[data-route]');
-  if (!b) return;
-  const i = Number(b.dataset.route);
-  state.plan.open = state.plan.open === i ? -1 : i;
-  renderPlan();
-});
-
-function renderPlan() {
-  const p = state.plan;
-  const setVal = (id, v, ph) => {
-    const el = $(`#${id} .od-val`);
-    el.textContent = v || ph;
-    el.classList.toggle('placeholder', !v);
-  };
-  setVal('plan-from', p.from, 'Escolha a origem');
-  setVal('plan-to', p.to, 'Escolha o destino');
-  $$('[data-when]').forEach(b => b.setAttribute('aria-pressed', b.dataset.when === p.when));
-  $('#plan-at').hidden = p.when !== 'at';
-
   const out = $('#plan-results');
+  if (!out) return;
   if (!p.from || !p.to) {
-    out.innerHTML = `<div class="empty">${ICON.route}<b>Para onde vamos?</b>Escolha a origem e o destino para ver as melhores opções de viagem.</div>`;
+    out.innerHTML = `<div class="empty">${ICON.route}<b>Para onde vamos?</b>Escolha a origem e o destino para ver as opções de viagem.</div>`;
     return;
   }
   if (p.from === p.to) {
     out.innerHTML = `<div class="empty">${ICON.route}<b>Origem e destino iguais</b>Escolha estações diferentes.</div>`;
     return;
   }
-
   const now = spNow();
   let dt = dayTypeOf(now), dep = minutesOf(now), today = true;
   if (p.when === 'at' && $('#plan-date').value && $('#plan-time').value) {
@@ -554,17 +513,16 @@ function renderPlan() {
   }
   const results = plan(p.from, p.to, dep, dt, 4);
   if (!results.length) {
-    out.innerHTML = `<div class="empty">${ICON.clock}<b>Nenhuma viagem encontrada</b>Não há trens a partir desse horário (${DAY_LABELS[dt].toLowerCase()}). Tente outro horário.</div>`;
+    out.innerHTML = `<div class="empty">${ICON.clock}<b>Nenhuma viagem encontrada</b>Não há trens a partir desse horário (${DIA_LABEL[dt]}). Tente outro horário.</div>`;
     return;
   }
   const fastest = results.reduce((a, b) => (b.arr - b.dep < a.arr - a.dep ? b : a));
-  out.innerHTML = `<div class="results-head"><span>${results.length} opções · ${DAY_LABELS[dt]}</span></div>` +
+  out.innerHTML = `<div class="results-head"><span>${results.length} opções · ${DIA_SHORT[dt]}</span></div>` +
     results.map((r, i) => routeCard(r, i, r === results[0] ? 'Chega primeiro' : r === fastest ? 'Mais rápida' : '', today ? minutesOf(now) : null)).join('');
 
-  // Dados de lotação e vagão das estações de embarque, baldeação e destino.
   const needed = [...new Set(results.flatMap(r => r.legs.flatMap(l => [l.from, l.to])))];
   Promise.all(needed.map(n => loadStation(n, dt))).then(fresh => {
-    if (fresh.some(Boolean) && state.tab === 'plan') renderPlan();
+    if (fresh.some(Boolean) && $('#v-rota') && !$('#v-rota').hidden) renderPlanResults();
   });
 }
 
@@ -576,12 +534,11 @@ function routeCard(r, i, label, nowM) {
     `<i style="flex:${l.arr - l.dep};--c:${l.trip.line.color}"></i>`).join('');
   const leave = nowM != null ? r.dep - nowM : null;
   const meta = [
-    r.legs.map(l => badge(l.trip.line)).join(`<span aria-hidden="true">›</span>`),
+    r.legs.map(l => badge(l.trip.line)).join('<span aria-hidden="true" class="arrow">›</span>'),
     transfers ? `${transfers} ${transfers > 1 ? 'baldeações' : 'baldeação'}` : 'Direto',
     leave != null && leave >= 0 && leave < 120 ? `<span class="go">Sai ${inText(leave)}</span>` : '',
   ].filter(Boolean).join('<span class="sep"></span>');
-  const warn = alertsFor({ lines: r.legs.map(l => l.trip.line.id), stations: r.legs.flatMap(l => [l.from, l.to]) });
-
+  const warn = alertsFor2({ lines: r.legs.map(l => l.trip.line.id), stations: r.legs.flatMap(l => [l.from, l.to]) });
   return `<article class="route ${i === 0 ? 'best' : ''}">
     <button class="route-sum" type="button" data-route="${i}" aria-expanded="${open}">
       <div class="route-top">
@@ -612,7 +569,7 @@ function timeline(r) {
     const crowd = crowdForecast(l.trip.line.id, l.trip.dir, l.dep, l.from);
     const car = bestCar(l.to, l.trip.line.id, l.trip.dir, last ? 'saida' : 'baldeacao');
     const carHint = car && !car.weak
-      ? `<span class="car-hint">${cars(car.zone)}Embarque no vagão do <b>${ZONE_LABEL[car.zone].toLowerCase()}</b> para ${last ? 'sair mais rápido' : 'agilizar a baldeação'}</span>` : '';
+      ? `<span class="car-hint">${cars(car.zone)}Embarque no vagão do <b>${ZONE[car.zone].toLowerCase()}</b> para ${last ? 'sair mais rápido' : 'agilizar a baldeação'}</span>` : '';
     html += `<li class="ride" style="--c:${c}"><span></span><span class="rail"></span>
       <div class="what">${badge(l.trip.line)} ${l.count} ${l.count === 1 ? 'estação' : 'estações'} · ${dur(l.arr - l.dep)}${crowd ? crowdChip(crowd) : ''}${carHint}</div></li>`;
     html += `<li class="stop ${last ? 'last' : ''}" style="--c:${c}"><time>${fmt(l.arr)}</time><span class="rail"></span>
@@ -621,253 +578,341 @@ function timeline(r) {
   return `<ol class="tl">${html}</ol>`;
 }
 
-// ---------- Ramais ----------
-
-function lineSummary(line, dt) {
-  const deps = tripsFor(dt).filter(t => t.line === line && t.dir === 0).map(t => t.stops[0].time).sort((a, b) => a - b);
-  if (!deps.length) return null;
-  return { first: deps[0], last: deps[deps.length - 1], count: deps.length };
-}
-
-function freqText(line, dt) {
-  const s = line.service[dt];
-  if (DATA_MODE === 'simulado' && s && !s.times) return s.peak === s.off ? `a cada ${s.off} min` : `${s.peak}–${s.off} min`;
-  const sum = lineSummary(line, dt);
-  if (!sum) return '—';
-  return sum.count > 1 ? `~${Math.round((sum.last - sum.first) / (sum.count - 1))} min` : '1 viagem';
-}
-
-$('#lines-items').addEventListener('click', e => {
-  const b = e.target.closest('[data-line]');
-  if (b) { state.lineId = b.dataset.line; renderLines(); window.scrollTo(0, 0); }
+// Abre a rota com "De" e "Para" preenchidos (ex.: a partir da tela de estação).
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-route-to]');
+  if (!b) return;
+  state.plan.to = b.dataset.routeTo; store.set('to', state.plan.to);
+  if (!state.plan.from) { state.plan.from = state.station; store.set('from', state.plan.from); }
+  state.plan.open = -1;
+  go('#/rota');
 });
 
-function renderLines() {
+// ---------- Tela: Linhas ----------
+
+function renderLinhas() {
+  const el = $('#v-linhas');
   const now = spNow(), m = minutesOf(now), dt = dayTypeOf(now);
-  if (state.lineId) return renderLineDetail(lineById(state.lineId), m, dt);
-  $('#line-detail').hidden = true;
-  $('#lines-list').hidden = false;
-  $('#lines-items').innerHTML = LINES.map(l => {
-    const running = liveTrips(m, dt, l.id).length;
-    return `<button class="line-item" type="button" style="--c:${l.color}" data-line="${l.id}">
-      <span class="bar"></span>
-      <span><h3>${esc(l.name)}</h3><p>${esc(l.from)} → ${esc(l.to)}</p>
-        <span class="live-count ${running ? '' : 'off'}">${running ? `${running} ${running === 1 ? 'trem' : 'trens'} agora` : 'Sem trens agora'}</span></span>
-      <span class="side">${ICON.chev}</span>
-    </button>`;
-  }).join('');
+  el.innerHTML = `
+    <h1 class="page-title">Linhas</h1>
+    <p class="lead">Toque numa linha para ver as estações e os horários.</p>
+    <div class="line-list">${LINES.map(l => {
+      const running = liveTrips(m, dt, l.id).length;
+      const sum = lineSummary(l, dt);
+      return `<a class="line-item" href="#/linha/${l.id}" style="--c:${l.color}">
+        <span class="bar"></span>
+        <span class="line-body"><h3>${esc(l.name)}</h3><p>${esc(l.from)} ↔ ${esc(l.to)}</p>
+          <span class="line-meta">${sum ? `${fmt(sum.first)} – ${fmt(sum.last)}` : 'Sem operação'} · ${l.stops.length} estações</span>
+          <span class="live-count ${running ? '' : 'off'}">${running ? `${running} ${running === 1 ? 'trem' : 'trens'} circulando agora` : 'Nenhum trem circulando agora'}</span></span>
+        <span class="side">${ICON.chev}</span></a>`;
+    }).join('')}</div>`;
 }
 
-function renderLineDetail(line, m, dt) {
-  $('#lines-list').hidden = true;
-  const box = $('#line-detail');
-  box.hidden = false;
-  const n = line.stops.length, ROW = 48, PAD = 10;
-  const live = liveTrips(m, dt, line.id);
-  const sum = lineSummary(line, dt);
-  const trains = live.map(t => {
-    const p = tripPosition(t, m);
-    const idx = t.dir === 0 ? p : n - 1 - p;
-    const label = `Trem para ${t.dest}${t.delay ? `, ${t.delay} min de atraso` : ''}`;
-    return `<div class="train d${t.dir}${t.delay ? ' late' : ''}" style="top:${PAD + idx * ROW + ROW / 2}px" title="${esc(label)}" role="img" aria-label="${esc(label)}">${t.dir ? ICON.up : ICON.down}</div>`;
-  }).join('');
+// ---------- Tela: Linha ----------
 
-  box.innerHTML = `
-    <button class="back" id="line-back" type="button">${ICON.back}Ramais</button>
+function renderLinha() {
+  const el = $('#v-linha');
+  const line = lineById(state.line);
+  const now = spNow(), m = minutesOf(now);
+  if (!state.lineDay) state.lineDay = dayTypeOf(now);
+  const dt = state.lineDay, dir = state.lineDir;
+  const order = dir === 0 ? line.stops : [...line.stops].reverse();
+  const running = liveTrips(m, dt, line.id);
+  const sum = lineSummary(line, dt);
+
+  el.innerHTML = `
+    <a class="back" href="#/linhas">${ICON.back}Linhas</a>
     <div class="card line-hero" style="--c:${line.color}">
       ${badge(line)}
-      <h1>${esc(line.from)} → ${esc(line.to)}</h1>
-      <p>${esc(line.kind)} · ${DAY_LABELS[dt]}</p>
+      <h1>${esc(line.from)} ↔ ${esc(line.to)}</h1>
+      <p>${esc(line.kind)}</p>
       <div class="stats">
-        <div class="stat"><b>${live.length}</b><span>trens agora</span></div>
-        <div class="stat"><b>${freqText(line, dt)}</b><span>intervalo</span></div>
-        <div class="stat"><b>${sum ? `${fmt(sum.first)}` : '—'}</b><span>primeiro trem</span></div>
-        <div class="stat"><b>${sum ? `${fmt(sum.last)}` : '—'}</b><span>último trem</span></div>
-      </div>
-      <div class="hero-actions">
-        <a class="btn" href="#times" id="line-times">${ICON.times}Ver horários</a>
-        <span class="hero-note">${n} estações · ${dur(line.stops[n - 1][1])} de ponta a ponta</span>
+        <div class="stat"><b>${running.length}</b><span>trens agora</span></div>
+        <div class="stat"><b>${order.length}</b><span>estações</span></div>
+        <div class="stat"><b>${sum ? fmt(sum.first) : '—'}</b><span>primeiro</span></div>
+        <div class="stat"><b>${sum ? fmt(sum.last) : '—'}</b><span>último</span></div>
       </div>
     </div>
-    <div class="legend">
-      <span><span class="train d0">${ICON.down}</span>para ${esc(line.to)}</span>
-      <span><span class="train d1">${ICON.up}</span>para ${esc(line.from)}</span>
-      <span><span class="train late">${ICON.down}</span>atrasado</span>
+    <div class="ctl">
+      <div class="seg" role="group" aria-label="Sentido">
+        <button type="button" data-ldir="0" aria-pressed="${dir === 0}">Para ${esc(line.to)}</button>
+        <button type="button" data-ldir="1" aria-pressed="${dir === 1}">Para ${esc(line.from)}</button>
+      </div>
+      <div class="seg" role="group" aria-label="Dia">
+        ${['util', 'sab', 'dom'].map(d => `<button type="button" data-lday="${d}" aria-pressed="${dt === d}">${d === 'util' ? 'Útil' : d === 'sab' ? 'Sábado' : 'Domingo'}</button>`).join('')}
+      </div>
     </div>
-    <div class="card diagram" style="--c:${line.color}">
-      <div class="track" style="top:${PAD + ROW / 2}px;height:${(n - 1) * ROW}px"></div>
-      ${line.stops.map(([name, off], i) => `<div class="st ${i === 0 || i === n - 1 ? 'term' : ''}">
-        <span class="st-name">${esc(name)}</span><span class="st-time">${off ? `+${off} min` : 'início'}</span></div>`).join('')}
-      ${trains}
-    </div>`;
-  $('#line-back').onclick = () => { state.lineId = null; renderLines(); };
-  $('#line-times').onclick = () => { state.times.line = line.id; state.times.station = null; };
+    <ol class="stop-list">${order.map(([name]) => {
+      const next = departures(name, m, dt, 6).flatMap(g => g.items)
+        .filter(it => it.trip.line.id === line.id && it.trip.dir === dir)
+        .sort((a, b) => a.eta - b.eta)[0];
+      const diff = next ? next.eta - m : null;
+      return `<li><a href="#/estacao/${encodeURIComponent(name)}" class="stop-row">
+        <span class="stop-dot" style="--c:${line.color}"></span>
+        <span class="stop-name">${esc(name)}</span>
+        <span class="stop-next">${next ? `<b>${diff < 1 ? 'Agora' : fmt(next.eta)}</b><small>${diff < 1 ? '' : inText(diff)}</small>` : '<small>—</small>'}</span>
+      </a></li>`;
+    }).join('')}</ol>
+    <p class="fineprint">Próximo trem em cada estação, neste sentido e dia. Horários oficiais de início e fim; intervalos estimados.</p>`;
+
+  $$('[data-ldir]', el).forEach(b => b.onclick = () => { state.lineDir = Number(b.dataset.ldir); renderLinha(); });
+  $$('[data-lday]', el).forEach(b => b.onclick = () => { state.lineDay = b.dataset.lday; renderLinha(); });
 }
 
-// ---------- Horários ----------
+// ---------- Tela: Estação ----------
 
-// ---------- Dados oficiais da operadora ----------
+function renderEstacao() {
+  const el = $('#v-estacao');
+  const st = state.station;
+  const now = spNow(), m = minutesOf(now), dt = dayTypeOf(now);
+  const fav = state.favs.includes(st);
+  const tabs = [['proximos', 'Próximos'], ['horarios', 'Horários'], ['servicos', 'Serviços e relatos']];
+  el.innerHTML = `
+    <a class="back" href="#/">${ICON.back}Início</a>
+    <div class="st-head">
+      <div>
+        <h1 class="st-title">${esc(st)}</h1>
+        <div class="dots lines-row">${linesAt(st).map(l => badge(l)).join(' ')}</div>
+      </div>
+      <button class="icon-btn" id="st-fav" type="button" aria-pressed="${fav}" aria-label="${fav ? 'Remover dos favoritos' : 'Salvar como favorita'}">${ICON.star}</button>
+    </div>
+    <div class="subtabs" role="tablist">${tabs.map(([id, t]) => `<button type="button" role="tab" data-stab="${id}" aria-selected="${state.stTab === id}">${t}</button>`).join('')}</div>
+    <div id="st-body"></div>
+    <div class="bottom-action"><button class="btn primary-btn" id="st-report" type="button">${ICON.megaphone}Relatar trem aqui</button></div>`;
 
-const DIA_LABEL = { util: 'dias úteis', sab: 'sábado', dom: 'domingo e feriados' };
+  $$('[data-stab]', el).forEach(b => b.onclick = () => { state.stTab = b.dataset.stab; renderEstacao(); });
+  $('#st-fav', el).onclick = () => toggleFav(st);
+  $('#st-report', el).onclick = () => openReportPicker(st);
 
-// Primeiro e último trem oficiais desta estação para o destino, no tipo de dia.
-function officialLine(station, dest, dayType) {
-  const st = officialStation(station);
-  if (!st) return null;
-  const rows = st.trens.filter(t => t.para === dest && t.dia === dayType);
-  return rows.length ? { first: rows.map(r => r.primeiro).sort()[0], last: rows.map(r => r.ultimo).sort().at(-1) } : null;
+  const body = $('#st-body', el);
+  if (state.stTab === 'proximos') body.innerHTML = proximosHtml(st, m, dt);
+  if (state.stTab === 'horarios') { body.innerHTML = horariosHtml(st, dt); bindHorarios(body, st); }
+  if (state.stTab === 'servicos') { body.innerHTML = servicosHtml(st, dt); bindServicos(body, st); }
+  loadStation(st, dt).then(fresh => { if (fresh && parseHash().seg === 'estacao' && parseHash().arg === st) renderEstacao(); });
 }
 
-function officialHeader(o) {
-  if (!o) return '';
-  return `<div class="official-note">${ICON.check}<span>Oficial (${DIA_LABEL[state.times.day] || ''}): 1º trem <b>${o.first}</b> · último <b>${o.last}</b>. Os horários entre eles são estimados.</span></div>`;
+function proximosHtml(st, m, dt) {
+  const groups = departures(st, m, dt, 6);
+  if (!groups.length) return `<div class="empty">${ICON.clock}<b>Sem mais trens hoje</b>Os horários de amanhã aparecem a partir da madrugada.</div>`;
+  return groups.map(g => {
+    const [first, ...rest] = g.items;
+    const diff = first.eta - m;
+    const dir = first.trip.dir;
+    const crowd = crowdForecast(g.line.id, dir, first.sched, st);
+    const hero = diff < 1 ? '<span class="eta-num now">Agora</span>'
+      : diff < 60 ? `<span class="eta-num">${Math.floor(diff)}</span><span class="eta-unit">min</span>`
+        : `<span class="eta-num sm">${fmt(first.eta)}</span>`;
+    const car = bestCar(st, g.line.id, dir, 'saida');
+    const carLine = car && !car.weak ? `<div class="car-line">${cars(car.zone)}<span>Vagão do <b>${ZONE[car.zone].toLowerCase()}</b> para sair mais perto da saída</span></div>` : '';
+    return `<article class="dep" style="--c:${g.line.color}">
+      <header class="dep-head">${badge(g.line)}<span class="dep-dir">para <b>${esc(g.dest)}</b></span>
+        <button class="report-btn" type="button" data-report="${g.line.id}|${dir}" aria-label="Relatar sobre ${esc(g.line.name)}">${ICON.megaphone}<span>Relatar</span></button></header>
+      <div class="dep-hero">
+        <div class="eta">${hero}</div>
+        <div class="dep-meta">${diff < 60 ? `<span class="dep-time">${first.trip.delay ? `<s>${fmt(first.sched)}</s>` : ''}${fmt(first.eta)}</span>` : `<span class="dep-time">${inText(diff)}</span>`}${statusTag(first)}</div>
+      </div>
+      ${crowd ? `<div class="dep-crowd">${crowdChip(crowd)}</div>` : ''}
+      ${carLine}
+      ${rest.length ? `<ol class="dep-next" aria-label="Trens seguintes">${rest.map(it => `<li>
+        <time class="${it.trip.delay ? 'late-sm' : ''}">${fmt(it.eta)}</time><span class="in">${inText(it.eta - m).replace('em ', '')}</span></li>`).join('')}</ol>` : ''}
+    </article>`;
+  }).join('');
 }
 
-// Painel "Informações oficiais" da estação: ramais, funcionamento, serviços e destinos de hoje.
-function renderOfficial(st, dt) {
-  const off = officialStation(st);
-  const box = $('#official-body');
-  if (!off) {
-    box.innerHTML = '<p class="panel-empty">Esta estação não tem dados publicados pela operadora.</p>';
-    return;
-  }
-  const h = off.horario && off.horario[dt];
-  const hoje = off.trens.filter(t => t.dia === dt);
-  const dests = [...new Set(hoje.map(t => t.para))];
-  const svc = off.servicos.length ? off.servicos.map(s => `<span class="svc">${esc(s)}</span>`).join('') : '<span class="muted small">Nenhum listado</span>';
-  box.innerHTML = `
-    <div class="off-row"><span class="off-k">Funcionamento</span><span class="off-v">${h ? `${h[0]} às ${h[1]}` : 'Sem horário publicado'} <span class="muted small">(${DIA_LABEL[dt]})</span></span></div>
-    <div class="off-row"><span class="off-k">Ramais</span><span class="off-v badges">${off.ramais.map(r => { const l = LINES.find(x => x.name === r); return l ? badge(l) : esc(r); }).join(' ')}</span></div>
-    <div class="off-row"><span class="off-k">Serviços</span><span class="off-v svcs">${svc}</span></div>
-    ${dests.length ? `<div class="off-sub">Primeiro e último trem (${DIA_LABEL[dt]})</div>` +
-      dests.map(d => { const o = officialLine(st, d, dt); return `<div class="off-row"><span class="off-k">Para ${esc(d)}</span><span class="off-v tnum">${o.first} – ${o.last}</span></div>`; }).join('') : ''}
-    <p class="panel-foot">Fonte: <a href="https://trensrj.com.br/pt/conheca-as-estacoes/${off.slug}" target="_blank" rel="noopener">página da estação no site da TrensRJ</a> · coletado em ${new Date(window.OFICIAL.coletadoEm).toLocaleDateString('pt-BR')}</p>`;
-}
-
-function renderTimes() {
+function horariosHtml(st, dt) {
+  const lines = linesAt(st);
   const t = state.times;
-  if (!t.day) t.day = dayTypeOf(spNow());
-  const line = lineById(t.line) || LINES[0];
+  if (!t.line || !lines.some(l => l.id === t.line)) t.line = lines[0]?.id;
+  if (!t.day) t.day = dt;
+  const line = lineById(t.line);
+  if (!line) return '<div class="empty">Sem ramais nesta estação.</div>';
   const order = t.dir === 0 ? line.stops : [...line.stops].reverse();
   const options = order.slice(0, -1).map(([n]) => n);
-  if (!options.includes(t.station)) t.station = options.includes(state.station) ? state.station : options[0];
-
-  $('#times-lines').innerHTML = LINES.map(l =>
-    `<button class="lchip" type="button" style="--c:${l.color}" data-tl="${l.id}" aria-pressed="${l.id === line.id}"><i></i>${esc(l.name)}</button>`).join('');
-  $('#times-dir').innerHTML = [0, 1].map(d =>
-    `<button type="button" data-td="${d}" aria-pressed="${t.dir === d}">para ${esc(d === 0 ? line.to : line.from)}</button>`).join('');
-  $('#times-day').innerHTML = [['util', 'Dia útil'], ['sab', 'Sábado'], ['dom', 'Domingo']].map(([k, v]) =>
-    `<button type="button" data-tday="${k}" aria-pressed="${t.day === k}">${v}</button>`).join('');
-  $('#times-station').innerHTML = options.map(n => `<option ${n === t.station ? 'selected' : ''}>${esc(n)}</option>`).join('');
-
   const times = tripsFor(t.day)
     .filter(x => x.line.id === line.id && x.dir === t.dir)
-    .map(x => ({ s: x.stops.find(s => s.name === t.station), dest: x.dest }))
-    .filter(x => x.s && withinOfficial(t.station, x.dest, x.s.time, t.day))
+    .map(x => ({ s: x.stops.find(s => s.name === st), dest: x.dest }))
+    .filter(x => x.s && withinOfficial(st, x.dest, x.s.time, t.day))
     .map(x => x.s.time).sort((a, b) => a - b);
-  const official = officialLine(t.station, destOf(line, t.dir), t.day);
-  if (!times.length) {
-    $('#times-table').innerHTML = `${officialHeader(official)}<div class="empty">${ICON.clock}<b>Sem operação</b>Este ramal não opera neste dia.</div>`;
-    return;
-  }
-  const now = spNow();
-  const isToday = t.day === dayTypeOf(now), m = minutesOf(now);
-  const nextT = isToday ? times.find(x => x >= m) : undefined;
+  const o = officialLine(st, destOf(line, t.dir), t.day);
+  const head = o ? `<div class="official-note">${ICON.check}<span>Oficial (${DIA_LABEL[t.day]}): 1º trem <b>${o.first}</b> · último <b>${o.last}</b>. Os horários entre eles são estimados.</span></div>` : '';
+  const chips = `<div class="chips-scroll lines-chips">${lines.map(l =>
+    `<button class="lchip" type="button" style="--c:${l.color}" data-tl="${l.id}" aria-pressed="${l.id === line.id}"><i></i>${esc(l.name)}</button>`).join('')}</div>`;
+  const ctl = `<div class="ctl">
+      <div class="seg" role="group" aria-label="Sentido">${[0, 1].map(d => `<button type="button" data-td="${d}" aria-pressed="${t.dir === d}">Para ${esc(d === 0 ? line.to : line.from)}</button>`).join('')}</div>
+      <div class="seg" role="group" aria-label="Dia">${['util', 'sab', 'dom'].map(d => `<button type="button" data-tday="${d}" aria-pressed="${t.day === d}">${d === 'util' ? 'Útil' : d === 'sab' ? 'Sábado' : 'Domingo'}</button>`).join('')}</div>
+    </div>`;
+  if (!times.length) return `${chips}${ctl}${head}<div class="empty">${ICON.clock}<b>Sem operação</b>Este ramal não passa aqui neste sentido e dia.</div>`;
+  const now = spNow(), isToday = t.day === dayTypeOf(now), mm = minutesOf(now);
+  const nextT = isToday ? times.find(x => x >= mm) : undefined;
   const byHour = new Map();
-  for (const x of times) {
-    const h = Math.floor(x / 60);
-    if (!byHour.has(h)) byHour.set(h, []);
-    byHour.get(h).push(x);
-  }
+  for (const x of times) { const h = Math.floor(x / 60); if (!byHour.has(h)) byHour.set(h, []); byHour.get(h).push(x); }
   const curHour = nextT !== undefined ? Math.floor(nextT / 60) : null;
   const hidden = curHour != null && !t.showPast ? [...byHour.keys()].filter(h => h < curHour).length : 0;
   const hours = [...byHour].filter(([h]) => !hidden || h >= curHour);
-  $('#times-table').innerHTML = `
-    ${officialHeader(official)}
-    <div class="times-summary"><span><b>${times.length}</b> partidas estimadas de ${esc(t.station)}</span>
-      ${nextT !== undefined ? `<span>Próximo: <b>${fmt(nextT)}</b> (${inText(nextT - m)})</span>` : ''}</div>
+  return `${chips}${ctl}${head}
+    <div class="times-summary"><span><b>${times.length}</b> partidas estimadas</span>
+      ${nextT !== undefined ? `<span>Próximo: <b>${fmt(nextT)}</b> (${inText(nextT - mm)})</span>` : ''}</div>
     ${hidden ? `<button class="show-past" type="button" id="times-past">Mostrar ${hidden} ${hidden === 1 ? 'hora anterior' : 'horas anteriores'}</button>` : ''}
     <div class="hours">${hours.map(([h, xs]) => `
       <div class="hour ${nextT !== undefined && Math.floor(nextT / 60) === h ? 'current' : ''}"><b>${String(h % 24).padStart(2, '0')}h</b>
-        <span class="mins">${xs.map(x => `<span class="${x === nextT ? 'next' : isToday && x < m ? 'past' : ''}">${String(Math.round(x) % 60).padStart(2, '0')}</span>`).join('')}</span></div>`).join('')}
+        <span class="mins">${xs.map(x => `<span class="${x === nextT ? 'next' : isToday && x < mm ? 'past' : ''}">${String(Math.round(x) % 60).padStart(2, '0')}</span>`).join('')}</span></div>`).join('')}
     </div>`;
-  const past = $('#times-past');
-  if (past) past.onclick = () => { t.showPast = true; renderTimes(); };
 }
 
-$('#times-lines').addEventListener('click', e => { const b = e.target.closest('[data-tl]'); if (b) { state.times.line = b.dataset.tl; state.times.showPast = false; renderTimes(); } });
-$('#times-dir').addEventListener('click', e => { const b = e.target.closest('[data-td]'); if (b) { state.times.dir = Number(b.dataset.td); renderTimes(); } });
-$('#times-day').addEventListener('click', e => { const b = e.target.closest('[data-tday]'); if (b) { state.times.day = b.dataset.tday; renderTimes(); } });
-$('#times-station').addEventListener('change', e => { state.times.station = e.target.value; renderTimes(); });
+function bindHorarios(body, st) {
+  const t = state.times;
+  $$('[data-tl]', body).forEach(b => b.onclick = () => { t.line = b.dataset.tl; t.showPast = false; t.dir = 0; renderEstacao(); });
+  $$('[data-td]', body).forEach(b => b.onclick = () => { t.dir = Number(b.dataset.td); t.showPast = false; renderEstacao(); });
+  $$('[data-tday]', body).forEach(b => b.onclick = () => { t.day = b.dataset.tday; t.showPast = false; renderEstacao(); });
+  $('#times-past', body)?.addEventListener('click', () => { t.showPast = true; renderEstacao(); });
+}
 
-// ---------- Avisos e pontualidade ----------
+function servicosHtml(st, dt) {
+  const off = officialStation(st);
+  const data = COMM.stations.get(st);
+  const lines = linesAt(st);
+  const h = off && off.horario && off.horario[dt];
+  const svc = off && off.servicos.length ? off.servicos.map(s => `<span class="svc">${esc(s)}</span>`).join('') : '<span class="muted small">Nenhum listado pela operadora</span>';
+  const info = off ? `<section class="card panel">
+      <div class="panel-head"><h2>Informações oficiais</h2><span class="panel-sub">publicadas pela TrensRJ</span></div>
+      <div class="off-row"><span class="off-k">Funcionamento</span><span class="off-v">${h ? `${h[0]} às ${h[1]}` : 'Sem horário publicado'} <span class="muted small">(${DIA_LABEL[dt]})</span></span></div>
+      <div class="off-row"><span class="off-k">Serviços</span><span class="off-v svcs">${svc}</span></div>
+    </section>` : '';
 
-state.punctDays = 30;
+  const vagao = lines.flatMap(l => arrivingDirs(l, st).map(d => {
+    const b = bestCar(st, l.id, d, 'saida');
+    const result = !b ? '<span class="muted">Ainda sem votos</span>'
+      : b.weak ? `<span class="muted">Poucos votos (${b.total})</span>`
+        : `${cars(b.zone)}<span><b>${ZONE[b.zone]}</b> <span class="muted">· ${b.pct}%</span></span>`;
+    return `<button class="row-btn" type="button" data-vote="${l.id}|${d}">${badge(l)}<span class="row-main">para <b>${esc(destOf(l, d))}</b></span><span class="row-side">${result}</span></button>`;
+  })).join('');
 
-function renderStatusView() {
+  const acess = ACESS.map(a => {
+    const s = data?.acess?.[a.item];
+    let val;
+    if (s) val = `<span class="pill-status ${s.ok ? 'ok' : 'bad'}">${s.ok ? a.yes : a.no}</span><span class="muted small">${s.n} ${s.n === 1 ? 'relato' : 'relatos'} · ${ago(new Date(s.at).toISOString())}</span>`;
+    else if (a.item === 'elevador' && off) val = off.servicos.includes('Elevador') ? '<span class="pill-status ok">Tem (oficial)</span><span class="muted small">não informa se funciona</span>' : '<span class="muted">Não consta na lista oficial</span>';
+    else if (a.item === 'escada' && off) val = '<span class="muted">Não consta na lista oficial</span>';
+    else val = '<span class="muted">Sem informação</span>';
+    return `<button class="row-btn" type="button" data-acess="${a.item}"><span class="row-ico">${a.icon}</span><span class="row-main">${a.name}</span><span class="row-side col">${val}</span></button>`;
+  }).join('');
+
+  const recent = data?.recent || [];
+  const feed = recent.length ? recent.map(r => {
+    const l = lineById(r.line);
+    const what = r.type === 'lotacao' ? `${ICON.people}${CROWD_NOW[r.value] || 'Lotação'}`
+      : r.type === 'passou' ? `${ICON.check}Trem passou${r.value > 1 ? ` · +${Math.round(r.value)} min` : ''}`
+        : r.type === 'parado' ? `${ICON.stop}Trem parado` : `${ICON.snow}Ar-condicionado quebrado`;
+    return `<div class="feed-row"><span class="feed-what">${what}</span>${l ? badge(l) : ''}<span class="muted small">${r.ago < 1 ? 'agora' : `há ${r.ago} min`}</span></div>`;
+  }).join('') : `<p class="panel-empty">Nenhum relato na última hora.</p>`;
+
+  return `${info}
+    <section class="card panel"><div class="panel-head"><h2>Vagão certo</h2><span class="panel-sub">para sair nesta estação, segundo passageiros</span></div>${vagao || '<p class="panel-empty">Sem ramais.</p>'}</section>
+    <section class="card panel"><div class="panel-head"><h2>Acessibilidade</h2><span class="panel-sub">informada por passageiros e pela operadora</span></div>${acess}</section>
+    <section class="card panel"><div class="panel-head"><h2>Última hora</h2></div>${feed}</section>`;
+}
+
+function bindServicos(body, st) {
+  $$('[data-vote]', body).forEach(b => b.onclick = () => {
+    const [lineId, dir] = b.dataset.vote.split('|');
+    const line = lineById(lineId);
+    let goal = 'saida';
+    openAction('Qual o melhor vagão?', `
+      <p class="action-sub">${badge(line)} para ${esc(destOf(line, Number(dir)))}, em ${esc(st)}</p>
+      <div class="seg" role="group" aria-label="Objetivo">
+        <button type="button" data-act="goal-saida" aria-pressed="true">Para sair da estação</button>
+        <button type="button" data-act="goal-baldeacao" aria-pressed="false">Para fazer baldeação</button>
+      </div>
+      <div class="zone-pick">${['fundo', 'meio', 'frente'].map(z => `<button type="button" data-act="z-${z}">${cars(z)}<span>${ZONE[z]}</span></button>`).join('')}</div>
+      <p class="panel-foot">A seta indica o sentido do trem. Frente é o primeiro vagão.</p>`,
+    async (act, btn) => {
+      if (act.startsWith('goal-')) { goal = act.slice(5); $$('[data-act^="goal-"]', $('#action-body')).forEach(x => x.setAttribute('aria-pressed', x === btn)); return; }
+      return submit({ type: 'vagao', station: st, line: lineId, dir: Number(dir), goal, value: act.slice(2) }, 'Voto registrado. Obrigado!');
+    });
+  });
+  $$('[data-acess]', body).forEach(b => b.onclick = () => {
+    const a = ACESS.find(x => x.item === b.dataset.acess);
+    openAction(a.name, `
+      <p class="action-sub">Em ${esc(st)}, como está agora?</p>
+      <div class="two-pick">
+        <button type="button" data-act="yes" class="ok">${ICON.check}${a.yes}</button>
+        <button type="button" data-act="no" class="bad">${ICON.alert}${a.no}</button>
+      </div>`,
+    act => submit({ type: 'acess', station: st, item: a.item, value: act === 'yes' }));
+  });
+}
+
+// ---------- Tela: Avisos ----------
+
+function renderAvisos() {
+  const el = $('#v-avisos');
   const alerts = COMM.overview?.alerts || [];
-  $('#status-alerts').innerHTML = alerts.length ? alerts.map(alertCard).join('')
-    : !COMM.overview
-      ? `<div class="empty">${ICON.wifiOff}<b>Avisos indisponíveis</b>Não foi possível falar com o servidor agora.</div>`
-      : `<div class="ok-state">${ICON.check}<div><b>Nenhum aviso agora</b><span>Sem paralisações ou alertas de segurança perto das estações.</span></div></div>`;
+  el.innerHTML = `
+    <h1 class="page-title">Avisos</h1>
+    <div class="alert-list">${alerts.length ? alerts.map(alertCard).join('')
+      : !COMM.overview
+        ? `<div class="empty">${ICON.wifiOff}<b>Avisos indisponíveis</b>Não foi possível falar com o servidor agora.</div>`
+        : `<div class="ok-state">${ICON.check}<div><b>Nenhum aviso agora</b><span>Sem paralisações ou alertas de segurança perto das estações.</span></div></div>`}</div>
+    <div class="section-head"><h2>Pontualidade por ramal</h2>
+      <div class="seg seg-sm" role="group" aria-label="Período">
+        ${[7, 30, 90].map(d => `<button type="button" data-days="${d}" aria-pressed="${state.punctDays === d}">${d} dias</button>`).join('')}
+      </div></div>
+    <div id="punct-list" class="punct-list"></div>
+    <p class="fineprint">Calculado com os relatos “o trem passou” enviados por passageiros. Não é um dado oficial da operadora.</p>`;
+  $$('[data-days]', el).forEach(b => b.onclick = () => { state.punctDays = Number(b.dataset.days); renderAvisos(); });
+  fillPunctuality();
+}
 
-  $$('[data-days]').forEach(b => b.setAttribute('aria-pressed', Number(b.dataset.days) === state.punctDays));
+function fillPunctuality() {
+  const box = $('#punct-list');
+  if (!box) return;
   const data = COMM.punct.get(state.punctDays);
   if (!data) {
-    $('#punct-list').innerHTML = '<div class="skeleton" style="height:240px"></div>';
+    box.innerHTML = '<div class="skeleton" style="height:200px"></div>';
     loadPunctuality(state.punctDays).then(ok => {
-      if (ok && state.tab === 'status') renderStatusView();
-      else if (!ok) $('#punct-list').innerHTML = `<div class="empty">${ICON.wifiOff}<b>Sem dados de pontualidade</b>Tente de novo quando estiver online.</div>`;
+      if (ok && parseHash().seg === 'avisos') renderAvisos();
+      else if (!ok && $('#punct-list')) $('#punct-list').innerHTML = `<div class="empty">${ICON.wifiOff}<b>Sem dados de pontualidade</b>Tente de novo quando estiver online.</div>`;
     });
     return;
   }
   const MIN = 20;
   const rows = data.lines.map(x => ({ ...x, line: lineById(x.line) })).filter(x => x.line)
     .sort((a, b) => (b.n >= MIN) - (a.n >= MIN) || (b.onTimePct ?? -1) - (a.onTimePct ?? -1));
-  $('#punct-list').innerHTML = rows.map((x, i) => {
-    if (x.n < MIN) {
-      return `<div class="punct few"><span class="rank">–</span>${badge(x.line)}<span class="muted small">Poucos relatos (${x.n}) para calcular</span></div>`;
-    }
+  box.innerHTML = rows.map((x, i) => {
+    if (x.n < MIN) return `<div class="punct few"><span class="rank">–</span>${badge(x.line)}<span class="muted small">Poucos relatos (${x.n}) para calcular</span></div>`;
     const tone = x.onTimePct >= 80 ? 'ok' : x.onTimePct >= 60 ? 'mid' : 'bad';
     return `<div class="punct">
       <span class="rank">${i + 1}</span>
       <div class="punct-main">
         <div class="punct-top">${badge(x.line)}<b class="pct ${tone}">${x.onTimePct}%</b><span class="muted small">no horário</span></div>
         <div class="punct-bar"><i class="${tone}" style="width:${x.onTimePct}%"></i></div>
-        <div class="punct-meta muted small">Atraso médio ${x.avgDelay} min · ${x.stops} ${x.stops === 1 ? 'paralisação relatada' : 'paralisações relatadas'}${x.worst ? ` · pior horário ${String(x.worst.hour).padStart(2, '0')}h (+${x.worst.avg} min)` : ''} · ${x.n} relatos</div>
-      </div>
-    </div>`;
+        <div class="punct-meta muted small">Atraso médio ${x.avgDelay} min · ${x.n} relatos${x.worst ? ` · pior horário ${String(x.worst.hour).padStart(2, '0')}h` : ''}</div>
+      </div></div>`;
   }).join('');
 }
 
-$('#punct-days').addEventListener('click', e => {
-  const b = e.target.closest('[data-days]');
-  if (b) { state.punctDays = Number(b.dataset.days); renderStatusView(); }
-});
+// ---------- Atualização ----------
 
-// ---------- Início ----------
-
-setTab(location.hash.slice(1) || 'live');
-setInterval(() => { if (state.tab === 'live' || state.tab === 'lines') render(); }, 15000);
-
+function refreshAll() { render(); }
 async function pollRealtime() { await refreshRealtime(); render(); }
-pollRealtime();
-setInterval(pollRealtime, 30000);
-
 async function pollOverview() {
   await loadOverview(dayTypeOf(spNow()));
-  if (state.tab === 'status') await loadPunctuality(state.punctDays);
+  if (parseHash().seg === 'avisos') await loadPunctuality(state.punctDays);
   render();
 }
+
+route();
+setInterval(() => { const s = parseHash().seg; if (s === 'inicio' || s === 'linha' || s === 'linhas' || s === 'estacao') render(); }, 15000);
+pollRealtime();
+setInterval(pollRealtime, 30000);
 pollOverview();
 setInterval(pollOverview, 60000);
 
 flushQueue();
-window.addEventListener('online', () => { toast('Conexão de volta.'); pollOverview(); });
+window.addEventListener('online', () => { toast('Conexão de volta.'); flushQueue(); pollOverview(); });
 window.addEventListener('offline', () => { toast('Sem internet: horários e rotas continuam funcionando.'); render(); });
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  // Quando uma versão nova do app assume, recarrega uma vez para não misturar arquivos antigos e novos.
   const hadController = !!navigator.serviceWorker.controller;
   let reloading = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {

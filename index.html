@@ -3,22 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Ramal</title>
-  <meta name="description" content="Próximos trens, rotas e horários dos trens do Rio de Janeiro.">
+  <title>Ramal — trens do Rio</title>
+  <meta name="description" content="Próximos trens, rotas, horários e avisos dos trens do Rio de Janeiro.">
   <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231f4fe0'/%3E%3Cpath d='M12 25V7M12 18c0-4 3-6.5 9-6.5' stroke='%23fff' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='21' cy='11.5' r='2.6' fill='%23ffcf33'/%3E%3C/svg%3E">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body>
   <a class="skip" href="#main">Pular para o conteúdo</a>
 
   <header class="appbar">
     <div class="appbar-in">
-      <a class="logo" href="#live" aria-label="Ramal, início">
+      <a class="logo" href="#/" aria-label="Ramal, início">
         <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M12 25V7M12 18c0-4 3-6.5 9-6.5"/><circle cx="21" cy="11.5" r="2.6"/></svg>
         <span class="logo-word">Ramal</span>
       </a>
@@ -30,108 +30,12 @@
   </header>
 
   <main id="main" class="page">
-    <!-- Ao vivo -->
-    <section id="view-live" class="view" aria-labelledby="live-title">
-      <h1 id="live-title" class="sr-only">Próximos trens</h1>
-      <div class="station-row">
-        <button class="station-btn" id="live-pick" type="button" aria-haspopup="dialog">
-          <span class="eyebrow">Estação</span>
-          <span class="station-name" id="live-name"></span>
-          <span class="dots" id="live-dots"></span>
-          <svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-        <button class="icon-btn fav" id="live-fav" type="button" aria-pressed="false" aria-label="Favoritar estação"></button>
-      </div>
-      <div class="chips-scroll" id="live-quick" aria-label="Estações salvas"></div>
-      <div id="live-alerts" class="alerts-inline"></div>
-      <div class="filters" id="live-filter" role="group" aria-label="Filtrar por ramal"></div>
-      <div id="live-board" class="board" aria-live="polite"></div>
-      <p class="fineprint" id="live-updated"></p>
-      <div class="extras">
-        <section class="card panel" aria-labelledby="oficial-title">
-          <div class="panel-head"><h2 id="oficial-title">Informações oficiais</h2><span class="panel-sub">publicadas pela TrensRJ</span></div>
-          <div id="official-body"></div>
-        </section>
-        <section class="card panel" aria-labelledby="vagao-title">
-          <div class="panel-head"><h2 id="vagao-title">Vagão certo</h2><span class="panel-sub">para sair nesta estação, segundo passageiros</span></div>
-          <div id="vagao-rows"></div>
-        </section>
-        <section class="card panel" aria-labelledby="acess-title">
-          <div class="panel-head"><h2 id="acess-title">Acessibilidade</h2><span class="panel-sub">informada por passageiros</span></div>
-          <div id="acess-rows"></div>
-        </section>
-        <section class="card panel" aria-labelledby="recent-title">
-          <div class="panel-head"><h2 id="recent-title">Relatos da última hora</h2></div>
-          <div id="recent-rows"></div>
-        </section>
-      </div>
-    </section>
-
-    <!-- Planejar -->
-    <section id="view-plan" class="view" aria-labelledby="plan-title" hidden>
-      <h1 id="plan-title" class="page-title">Planejar viagem</h1>
-      <div class="planner card">
-        <div class="od">
-          <div class="od-rail" aria-hidden="true"><i class="od-dot"></i><i class="od-line"></i><i class="od-dot end"></i></div>
-          <div class="od-fields">
-            <button class="od-field" id="plan-from" type="button" aria-haspopup="dialog"><span class="eyebrow">De</span><span class="od-val"></span></button>
-            <button class="od-field" id="plan-to" type="button" aria-haspopup="dialog"><span class="eyebrow">Para</span><span class="od-val"></span></button>
-          </div>
-          <button class="icon-btn swap" id="plan-swap" type="button" aria-label="Inverter origem e destino">
-            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16m0 0-3-3m3 3 3-3M17 20V4m0 0-3 3m3-3 3 3"/></svg>
-          </button>
-        </div>
-        <div class="when">
-          <div class="seg" role="group" aria-label="Quando">
-            <button type="button" data-when="now" aria-pressed="true">Sair agora</button>
-            <button type="button" data-when="at" aria-pressed="false">Escolher horário</button>
-          </div>
-          <div class="when-at" id="plan-at" hidden>
-            <label class="input"><span class="eyebrow">Data</span><input id="plan-date" type="date"></label>
-            <label class="input"><span class="eyebrow">Horário</span><input id="plan-time" type="time"></label>
-          </div>
-        </div>
-      </div>
-      <div id="plan-results" class="results" aria-live="polite"></div>
-    </section>
-
-    <!-- Ramais -->
-    <section id="view-lines" class="view" aria-labelledby="lines-title" hidden>
-      <div id="lines-list">
-        <h1 id="lines-title" class="page-title">Ramais</h1>
-        <div class="line-list" id="lines-items"></div>
-      </div>
-      <div id="line-detail" hidden></div>
-    </section>
-
-    <!-- Horários -->
-    <section id="view-times" class="view" aria-labelledby="times-title" hidden>
-      <h1 id="times-title" class="page-title">Horários</h1>
-      <div class="chips-scroll lines-chips" id="times-lines" role="group" aria-label="Ramal"></div>
-      <div class="card times-controls">
-        <div class="seg" id="times-dir" role="group" aria-label="Sentido"></div>
-        <div class="seg" id="times-day" role="group" aria-label="Dia"></div>
-        <label class="input select"><span class="eyebrow">Estação</span><select id="times-station"></select></label>
-      </div>
-      <div id="times-table"></div>
-    </section>
-
-    <!-- Avisos -->
-    <section id="view-status" class="view" aria-labelledby="status-title" hidden>
-      <h1 id="status-title" class="page-title">Avisos</h1>
-      <div id="status-alerts" class="alert-list"></div>
-      <div class="section-head">
-        <h2>Pontualidade por ramal</h2>
-        <div class="seg seg-sm" id="punct-days" role="group" aria-label="Período">
-          <button type="button" data-days="7">7 dias</button>
-          <button type="button" data-days="30" aria-pressed="true">30 dias</button>
-          <button type="button" data-days="90">90 dias</button>
-        </div>
-      </div>
-      <div id="punct-list" class="punct-list"></div>
-      <p class="fineprint">Calculado com os relatos “o trem passou” enviados por passageiros no Ramal. Não é um dado oficial da operadora.</p>
-    </section>
-
+    <div id="v-inicio" class="view" hidden></div>
+    <div id="v-rota" class="view" hidden></div>
+    <div id="v-linhas" class="view" hidden></div>
+    <div id="v-linha" class="view" hidden></div>
+    <div id="v-estacao" class="view" hidden></div>
+    <div id="v-avisos" class="view" hidden></div>
     <footer class="foot">Ramal é um projeto independente, sem vínculo com a operadora dos trens nem com o Governo do Estado.</footer>
   </main>
 
@@ -150,15 +54,6 @@
     <div id="picker-list" class="picker-list"></div>
   </dialog>
 
-  <dialog id="info" class="sheet small" aria-labelledby="info-title">
-    <div class="sheet-grip" aria-hidden="true"></div>
-    <div class="sheet-head">
-      <h2 id="info-title">Sobre os dados</h2>
-      <button class="text-btn" type="button" data-close>Fechar</button>
-    </div>
-    <div id="info-body" class="info-body"></div>
-  </dialog>
-
   <dialog id="action" class="sheet small" aria-labelledby="action-title">
     <div class="sheet-grip" aria-hidden="true"></div>
     <div class="sheet-head">
@@ -168,13 +63,22 @@
     <div id="action-body" class="action-body"></div>
   </dialog>
 
+  <dialog id="info" class="sheet small" aria-labelledby="info-title">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="info-title">Sobre os dados</h2>
+      <button class="text-btn" type="button" data-close>Fechar</button>
+    </div>
+    <div id="info-body" class="info-body"></div>
+  </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script src="gtfs-data.js?v=13"></script>
-  <script src="oficial-data.js?v=13"></script>
-  <script src="data.js?v=13"></script>
-  <script src="schedule.js?v=13"></script>
-  <script src="community.js?v=13"></script>
-  <script src="app.js?v=13"></script>
+  <script src="gtfs-data.js?v=14"></script>
+  <script src="oficial-data.js?v=14"></script>
+  <script src="data.js?v=14"></script>
+  <script src="schedule.js?v=14"></script>
+  <script src="community.js?v=14"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>
