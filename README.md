@@ -1,4 +1,8 @@
-# Ramal
+# Ramal — trens do Rio de Janeiro
+
+**[Acessar o Ramal](https://ramal-l9ye.onrender.com/)** · projeto independente, sem vínculo com a operadora dos trens nem com o Governo do Estado.
+
+Próximos trens por estação, rotas com baldeação, horários oficiais publicados pela operadora, mapa com posição estimada dos trens e avisos feitos pelos próprios passageiros. Funciona no navegador do celular e pode ser instalado como app.
 
 Site para acompanhar os trens metropolitanos do Rio de Janeiro: próximas chegadas por estação, ramais, grade de horários e planejador de viagem com baldeações.
 
