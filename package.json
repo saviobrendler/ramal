@@ -1,0 +1,18 @@
+{
+  "name": "ramal",
+  "version": "0.5.0",
+  "private": true,
+  "description": "Chegadas, horários, planejador de viagem, vagão certo e avisos dos trens do Rio de Janeiro.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/community.test.js",
+    "update-data": "node tools/update-data.js",
+    "import-gtfs": "node tools/import-gtfs.js",
+    "sample-gtfs": "node tools/make-sample-gtfs.js",
+    "seed-test": "node tools/seed-test-reports.js"
+  },
+  "engines": { "node": ">=22.13" },
+  "dependencies": {
+    "gtfs-realtime-bindings": "^1.1.1"
+  }
+}

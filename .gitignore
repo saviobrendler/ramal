@@ -1,0 +1,10 @@
+﻿node_modules/
+gtfs-data.js
+sample-gtfs/
+sample-realtime.json
+sample-realtime.pb
+data/
+alerts.json
+
+.claude/
+wordpress/*.zip

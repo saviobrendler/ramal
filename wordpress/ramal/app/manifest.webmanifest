@@ -1,0 +1,17 @@
+{
+  "name": "Ramal — trens do Rio",
+  "short_name": "Ramal",
+  "description": "Próximos trens, rotas, horários, vagão certo e avisos dos trens do Rio de Janeiro.",
+  "lang": "pt-BR",
+  "start_url": "/#live",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#1f4fe0",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

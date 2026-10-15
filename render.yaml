@@ -1,0 +1,17 @@
+# Render Blueprint: cria o serviço do Ramal usando o Dockerfile da raiz do projeto.
+# Plano gratuito: o serviço "dorme" sem acessos e o disco é temporário, então os relatos
+# dos passageiros se perdem quando o serviço reinicia (horários e estações não dependem disso).
+
+services:
+  - type: web
+    name: ramal
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: RAMAL_CORS_ORIGIN
+        value: "*"

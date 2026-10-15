@@ -1,0 +1,11 @@
+[
+  {
+    "id": "exemplo-obra",
+    "kind": "aviso",
+    "title": "Exemplo: obras na estação Madureira",
+    "detail": "Copie este arquivo para alerts.json e edite. Avisos com 'expires' no passado somem sozinhos.",
+    "lines": ["deodoro"],
+    "stations": ["Madureira"],
+    "expires": "2026-12-31T23:59:00-03:00"
+  }
+]

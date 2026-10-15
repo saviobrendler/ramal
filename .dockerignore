@@ -1,0 +1,10 @@
+﻿node_modules
+data
+sample-gtfs
+sample-realtime.*
+.claude
+.git
+test
+wordpress
+*.log
+alerts.json
