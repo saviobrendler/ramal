@@ -403,7 +403,7 @@ function renderInicio() {
 
     <a class="map-teaser" href="#/mapa">
       <span class="map-teaser-ico">${ICON.pin}</span>
-      <span><b>Mapa ao vivo <em class="pbadge">Premium</em></b><small>Veja os trens se deslocando e onde você está</small></span>
+      <span><b>Mapa ao vivo</b><small>Veja os trens se deslocando e onde você está</small></span>
       ${ICON.chev}
     </a>
 
@@ -1013,7 +1013,6 @@ function fmtDist(km) { return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFi
 
 function renderMapa() {
   const el = $('#v-mapa');
-  if (!isPremium()) return renderPremiumLock(el);
   if (el.dataset.lock) { delete el.dataset.lock; el.dataset.ready = ''; }
   if (!el.dataset.ready) {
     el.dataset.ready = '1';
@@ -1316,12 +1315,11 @@ function showPromo(delay = 4000) {
   }, delay);
 }
 $('#promo').addEventListener('close', () => store.set('promoDay', todayKey()));
-welcomeDlg.addEventListener('close', () => { store.set('welcomed', true); showPromo(1200); });
+welcomeDlg.addEventListener('close', () => store.set('welcomed', true));
 $('#welcome-pick').onclick = () => {
   welcomeDlg.close();
   openPicker('Sua estação', n => { state.station = n; store.set('station', n); remember(n); render(); });
 };
-showPromo(4000);
 setInterval(() => { const s = parseHash().seg; if (s === 'inicio' || s === 'linha' || s === 'linhas' || s === 'estacao') render(); }, 15000);
 pollRealtime();
 setInterval(pollRealtime, 30000);
