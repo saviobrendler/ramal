@@ -499,7 +499,7 @@ input, select { font: inherit; color: inherit; }
 .muted { color: var(--muted); }
 .small { font-size: 12.5px; }
 
-.tabbar { grid-template-columns: repeat(4, 1fr); }
+.tabbar { grid-template-columns: repeat(5, 1fr); }
 .tabbar a, .topnav a { position: relative; }
 .tab-badge {
   position: absolute; top: 6px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
@@ -984,3 +984,11 @@ button:disabled, [aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
 .lg-dot.est { background: var(--muted); }
 .premium-steps { margin: 0 0 4px; padding-left: 20px; color: var(--ink-2); font-size: 14.5px; text-align: left; max-width: 460px; display: grid; gap: 4px; }
 .premium-lock .btn.ghost { width: 100%; max-width: 420px; justify-content: center; }
+
+.map-train-img { width: 18px; height: 18px; filter: invert(1) brightness(1.1); display: block; }
+.tabbar a { font-size: 11px; }
+
+/* Marcador de trem: círculo na cor da linha com o ícone branco */
+.map-train { background: var(--c) !important; width: 32px !important; height: 32px !important; border-radius: 50% !important; border: 2px solid #fff !important; box-shadow: 0 3px 10px rgba(0,0,0,.45) !important; display: grid !important; place-items: center; }
+.map-train-img { width: 20px !important; height: 20px !important; filter: brightness(0) invert(1) !important; }
+.map-train.late { border-color: #ffb35c !important; }

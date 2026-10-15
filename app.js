@@ -58,6 +58,7 @@ const SERVICE_NOTES = {
 const TABS = [
   { id: 'inicio', label: 'Início', icon: ICON.home, hash: '#/' },
   { id: 'rota', label: 'Rotas', icon: ICON.route, hash: '#/rota' },
+  { id: 'mapa', label: 'Mapa', icon: ICON.pin, hash: '#/mapa' },
   { id: 'linhas', label: 'Linhas', icon: ICON.lines, hash: '#/linhas' },
   { id: 'avisos', label: 'Avisos', icon: ICON.bell, hash: '#/avisos' },
 ];
@@ -116,7 +117,7 @@ function parseHash() {
 }
 
 const VIEWS = ['inicio', 'rota', 'linhas', 'linha', 'estacao', 'avisos', 'mapa'];
-const NAV_OF = { inicio: 'inicio', rota: 'rota', linhas: 'linhas', linha: 'linhas', estacao: 'inicio', avisos: 'avisos', mapa: 'inicio' };
+const NAV_OF = { inicio: 'inicio', rota: 'rota', linhas: 'linhas', linha: 'linhas', estacao: 'inicio', avisos: 'avisos', mapa: 'mapa' };
 let lastSeg = null;
 
 function go(hash) { location.hash = hash; }
@@ -1095,7 +1096,7 @@ function drawTrains() {
     const late = trip.delay ? ' late' : '';
     const icon = L.divIcon({
       className: 'map-train-wrap',
-      html: `<div class="map-train${late}" style="--c:${trip.line.color}" title="${esc(trip.line.name)} para ${esc(trip.dest)}"><svg viewBox="0 0 24 24" style="transform:rotate(${trip.dir ? 180 : 0}deg)"><rect x="5" y="3" width="14" height="13" rx="3"/><path d="M5 11h14M8 20l2-3M16 20l-2-3"/></svg></div>`,
+      html: `<div class="map-train${late}" style="--c:${trip.line.color}" title="${esc(trip.line.name)} para ${esc(trip.dest)}"><img src="icons/train.png" alt="" class="map-train-img" style="transform:rotate(${trip.dir ? 180 : 0}deg)"></div>`,
       iconSize: [26, 26], iconAnchor: [13, 13],
     });
     L.marker(c, { icon, alt: `${trip.line.name} para ${trip.dest}, posição estimada`, title: `${trip.line.name} para ${trip.dest}${trip.delay ? `, ${trip.delay} min de atraso` : ''}` }).addTo(MAP.trains);

@@ -208,7 +208,7 @@ const types = {
   '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
   '.xml': 'application/xml', '.txt': 'text/plain',
 };
-const PUBLIC = new Set(['/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/gtfs-data.js', '/oficial-data.js', '/stations-geo.json', '/privacidade.html', '/apoio.html', '/pix.js',
+const PUBLIC = new Set(['/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/gtfs-data.js', '/oficial-data.js', '/stations-geo.json', '/privacidade.html', '/apoio.html', '/pix.js', '/icons/train.png',
   '/sw.js', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/maskable-512.png', '/icons/icon.svg']);
 
 http.createServer(async (req, res) => {
