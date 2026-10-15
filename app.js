@@ -1160,6 +1160,36 @@ function drawTrip() {
 // Atualiza o trajeto quando a rota muda em outra tela.
 window.addEventListener('storage', () => { if (parseHash().seg === 'mapa') drawTrip(); });
 
+// ---------- Pessoas usando agora ----------
+
+// Sinal a cada minuto, só com a aba aberta. Mostra o número no rodapé (ver server/online.js).
+async function heartbeat() {
+  if (document.hidden) return;
+  try {
+    const res = await fetch(API_BASE + 'api/heartbeat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dev: DEV_ID }) });
+    const j = await res.json();
+    if (typeof j.online === 'number') { COMM.online = j.online; showOnline(); }
+  } catch { /* sem internet: não mostra o número */ }
+}
+function showOnline() {
+  const el = $('#online');
+  if (!el || COMM.online == null) return;
+  el.hidden = false;
+  el.textContent = `${COMM.online} ${COMM.online === 1 ? 'pessoa usando' : 'pessoas usando'} agora`;
+}
+heartbeat();
+setInterval(heartbeat, 60e3);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) heartbeat(); });
+
+// Estatística de visitas (GoatCounter), só se o código da conta estiver em index.html.
+if (window.RAMAL_GOATCOUNTER) {
+  const gc = document.createElement('script');
+  gc.async = true;
+  gc.src = 'https://gc.zgo.at/count.js';
+  gc.dataset.goatcounter = `https://${window.RAMAL_GOATCOUNTER}.goatcounter.com/count`;
+  document.head.appendChild(gc);
+}
+
 // ---------- Atualização ----------
 
 function refreshAll() { render(); }

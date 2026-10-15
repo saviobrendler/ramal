@@ -101,6 +101,8 @@ function realtimeResponse() {
 
 const { Community, HttpError, migrateJson } = require('./server/community');
 const { Safety } = require('./server/safety');
+const { Online } = require('./server/online');
+const online = new Online();
 const dbFile = path.resolve(root, env('COMMUNITY_FILE') || 'data/community.db');
 const community = new Community({ root, file: dbFile });
 const migrated = migrateJson(community, path.resolve(root, 'data/community.json'));
@@ -150,6 +152,11 @@ async function api(req, res, url, q) {
     const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || '';
     return sendJson(res, 201, community.add(body, { ip }));
   }
+  if (url === '/api/heartbeat' && req.method === 'POST') {
+    const body = await readBody(req);
+    return sendJson(res, 200, { online: online.beat(body.dev) });
+  }
+  if (url === '/api/online') return sendJson(res, 200, { online: online.count() });
   if (url === '/api/health') return sendJson(res, 200, { ok: true, fogoCruzado: safety.fcStatus, reports: community.count() });
   if (url.startsWith('/api/admin/')) return adminApi(req, res, url, q);
   throw new HttpError(404, 'Rota não encontrada');
@@ -186,7 +193,7 @@ const types = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
 };
-const PUBLIC = new Set(['/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/gtfs-data.js', '/oficial-data.js', '/stations-geo.json',
+const PUBLIC = new Set(['/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/gtfs-data.js', '/oficial-data.js', '/stations-geo.json', '/privacidade.html',
   '/sw.js', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/maskable-512.png', '/icons/icon.svg']);
 
 http.createServer(async (req, res) => {

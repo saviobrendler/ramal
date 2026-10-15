@@ -913,3 +913,9 @@ body { background: radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, 
 .map-dark .leaflet-tile-pane { filter: invert(.9) hue-rotate(180deg) brightness(.9) saturate(.8); }
 .map-dark .leaflet-control-attribution { background: rgba(13,19,33,.7); color: #aab4c3; }
 .map-dark .leaflet-control-attribution a { color: #9fb8ff; }
+
+.foot { display: grid; gap: 6px; justify-items: center; }
+.foot p { margin: 0; }
+.foot a { color: var(--brand); text-decoration: none; font-weight: 600; }
+.foot-online { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--ok-soft); color: var(--ok) !important; font-weight: 700; font-size: 13px; }
+.foot-online::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: ring 1.6s ease-out infinite; }
