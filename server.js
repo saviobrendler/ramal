@@ -206,6 +206,7 @@ async function adminApi(req, res, url, q) {
 const types = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
+  '.xml': 'application/xml', '.txt': 'text/plain',
 };
 const PUBLIC = new Set(['/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/gtfs-data.js', '/oficial-data.js', '/stations-geo.json', '/privacidade.html', '/apoio.html', '/pix.js',
   '/sw.js', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/maskable-512.png', '/icons/icon.svg']);
@@ -226,7 +227,9 @@ http.createServer(async (req, res) => {
   }
 
   const rel = url === '/' ? '/index.html' : url;
-  if (!PUBLIC.has(rel)) { res.writeHead(404); return res.end('Não encontrado'); }
+  // Páginas por estação (indexáveis) e arquivos de busca: sitemap.xml e robots.txt.
+  const seoPage = /^\/estacao\/[a-z0-9-]+\.html$/.test(rel) || rel === '/sitemap.xml' || rel === '/robots.txt';
+  if (!PUBLIC.has(rel) && !seoPage) { res.writeHead(404); return res.end('Não encontrado'); }
   const file = path.join(root, rel);
   fs.readFile(file, (err, data) => {
     if (err && rel === '/gtfs-data.js') data = '/* Nenhum GTFS importado: o site usa os dados de demonstração. */';

@@ -5,7 +5,7 @@
     "description":  "Chegadas, horários, planejador de viagem, vagão certo e avisos dos trens do Rio de Janeiro.",
     "scripts":  {
                     "start":  "node server.js",
-                    "test": "node --test test/community.test.js test/online.test.js test/pix.test.js test/premium.test.js",
+                    "test": "node --test test/community.test.js test/online.test.js test/pix.test.js test/premium.test.js test/pages.test.js",
                     "update-data":  "node tools/update-data.js",
                     "import-gtfs":  "node tools/import-gtfs.js",
                     "sample-gtfs":  "node tools/make-sample-gtfs.js",

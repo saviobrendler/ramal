@@ -75,7 +75,8 @@ function applyRealtime(trips) {
   for (const t of trips) {
     const d = REALTIME.delays.get(t.id);
     t.rt = REALTIME.active && d !== undefined;
-    t.delay = t.rt ? Math.max(0, Math.round(d)) : REALTIME.active ? 0 : t.simDelay;
+    // Sem fonte real, não há atraso: a demonstração não inventa atrasos.
+    t.delay = t.rt ? Math.max(0, Math.round(d)) : 0;
   }
   return trips;
 }

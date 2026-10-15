@@ -22,5 +22,7 @@ if (!fs.existsSync(path.join(root, 'stations-geo.json'))) {
   run('fetch-station-coords.js');
 }
 
+run('build-pages.js');
+
 const off = JSON.parse(fs.readFileSync(path.join(root, 'data', 'trensrj-oficial.json'), 'utf8'));
 console.log(`\nDados atualizados em ${new Date(off.coletadoEm).toLocaleString('pt-BR')}: ${off.estacoes.length} estações, ${off.falharam.length} falhas.`);

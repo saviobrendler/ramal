@@ -335,7 +335,8 @@ function officialLine(station, dest, dayType) {
 
 function statusTag(it) {
   if (it.trip.delay) return `<span class="tag late">+${it.trip.delay} min</span>`;
-  if (it.trip.rt || DATA_MODE === 'simulado') return '<span class="tag ok">No horário</span>';
+  if (it.trip.rt) return '<span class="tag ok">No horário</span>';
+  if (DATA_MODE === 'simulado') return '<span class="tag plain">Estimado</span>';
   return '<span class="tag plain">Programado</span>';
 }
 

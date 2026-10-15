@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ramal-l9ye.onrender.com/sitemap.xml
