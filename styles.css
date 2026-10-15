@@ -790,7 +790,7 @@ body { background: radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, 
 .next-row.imminent, .dep.imminent { background: linear-gradient(90deg, color-mix(in srgb, var(--ok) 13%, transparent), transparent 75%), var(--surface); }
 .next-row.imminent .next-bar { animation: blink 1s steps(2, start) infinite; box-shadow: 0 0 12px var(--c); }
 .dep.imminent { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); animation: glow 1.6s ease-in-out infinite; }
-@keyframes glow { 0%, 100% { box-shadow: var(--shadow); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 16%, transparent), var(--shadow); } }
+@keyframes glow { 0%, 100% { box-shadow: var(--shadow); } 50% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--ok) 10%, transparent), var(--shadow); } }
 .dep .eta .when-min { font-size: 44px; }
 .dep .eta .when-clock { font-size: 34px; }
 .dep .eta .when-now { font-size: 30px; }
@@ -974,3 +974,13 @@ body { background: radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, 
 .maplist-line li { font-size: 14.5px; padding: 2px 0; break-inside: avoid; }
 .maplist-line a { color: var(--ink); }
 .maplist-line a:hover { color: var(--brand); }
+/* Revisão final de UI: foco, desabilitado, legenda e passos Premium */
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+button:disabled, [aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--ink-2); margin: 4px 2px 14px; }
+.legend-row span { display: inline-flex; align-items: center; gap: 7px; }
+.lg-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.lg-dot.ok { background: var(--ok); }
+.lg-dot.est { background: var(--muted); }
+.premium-steps { margin: 0 0 4px; padding-left: 20px; color: var(--ink-2); font-size: 14.5px; text-align: left; max-width: 460px; display: grid; gap: 4px; }
+.premium-lock .btn.ghost { width: 100%; max-width: 420px; justify-content: center; }

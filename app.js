@@ -717,6 +717,13 @@ function renderLinha() {
 
 // ---------- Tela: Estação ----------
 
+// Legenda que explica a diferença entre dado real e estimativa (aparece na lista de trens).
+function legendHtml() {
+  return `<div class="legend-row" role="note">
+    <span><i class="lg-dot ok"></i>No horário: dado real</span>
+    <span><i class="lg-dot est"></i>Estimado: sem posição real do trem</span></div>`;
+}
+
 // Evento "visita útil" no GoatCounter: uma vez por estação e por carregamento da página.
 const countedStations = new Set();
 function countStationView(name) {
@@ -748,7 +755,7 @@ function renderEstacao() {
   $('#st-fav', el).onclick = () => toggleFav(st);
 
   const body = $('#st-body', el);
-  if (state.stTab === 'proximos') { body.innerHTML = proximosHtml(st, m, dt) + `<button class="report-wide" type="button" id="st-report">${ICON.megaphone}<span>Relatar um trem nesta estação</span></button>`; $('#st-report', body).onclick = () => openReportPicker(st); }
+  if (state.stTab === 'proximos') { body.innerHTML = legendHtml() + proximosHtml(st, m, dt) + `<button class="report-wide" type="button" id="st-report">${ICON.megaphone}<span>Relatar um trem nesta estação</span></button>`; $('#st-report', body).onclick = () => openReportPicker(st); }
   if (state.stTab === 'horarios') { body.innerHTML = horariosHtml(st, dt); bindHorarios(body, st); }
   if (state.stTab === 'servicos') {
     const parts = servicosParts(st, dt);
@@ -764,7 +771,7 @@ function renderEstacao() {
 
 function proximosHtml(st, m, dt) {
   const groups = departures(st, m, dt, 6);
-  if (!groups.length) return `<div class="empty">${ICON.clock}<b>Sem mais trens hoje</b>Os horários de amanhã aparecem a partir da madrugada.</div>`;
+  if (!groups.length) return `<div class="empty">${ICON.clock}<b>Sem mais trens hoje</b>Veja a aba Horários para o primeiro trem de amanhã.</div>`;
   return groups.map(g => {
     const [first, ...rest] = g.items;
     const diff = first.eta - m;
@@ -1092,12 +1099,12 @@ function drawTrains() {
       html: `<div class="map-train${late}" style="--c:${trip.line.color}" title="${esc(trip.line.name)} para ${esc(trip.dest)}"><svg viewBox="0 0 24 24" style="transform:rotate(${trip.dir ? 180 : 0}deg)"><rect x="5" y="3" width="14" height="13" rx="3"/><path d="M5 11h14M8 20l2-3M16 20l-2-3"/></svg></div>`,
       iconSize: [26, 26], iconAnchor: [13, 13],
     });
-    L.marker(c, { icon, title: `${trip.line.name} para ${trip.dest}${trip.delay ? `, ${trip.delay} min de atraso` : ''}` }).addTo(MAP.trains);
+    L.marker(c, { icon, alt: `${trip.line.name} para ${trip.dest}, posição estimada`, title: `${trip.line.name} para ${trip.dest}${trip.delay ? `, ${trip.delay} min de atraso` : ''}` }).addTo(MAP.trains);
   }
   const w = $('#where');
   if (w && MAP.trainsCount !== n) { MAP.trainsCount = n; }
   const pill = $('#map-count');
-  if (pill) pill.textContent = `${n} ${n === 1 ? 'trem' : 'trens'} em circulação`;
+  if (pill) pill.textContent = `${n} ${n === 1 ? 'trem' : 'trens'} em circulação · posição estimada`;
 }
 
 // Cartão "Onde você está" com a estação mais perto e o botão de localização.
@@ -1146,10 +1153,17 @@ function startLocate() {
     }
     updateWhere();
   }, () => {
+    // Sem GPS: a pessoa escolhe a estação manualmente, em vez de ficar sem o mapa útil.
     MAP.userOn = false;
-    updateWhere();
-    toast('Não foi possível obter sua localização.');
-  }, { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 });
+    toast('Localização não disponível. Escolha sua estação.');
+    openPicker('Qual é a sua estação?', n => {
+      state.plan.from = n; store.set('from', n);
+      MAP.pos = GEO.data[n] || null;
+      MAP.userOn = true;
+      updateWhere();
+      drawTrip();
+    });
+  },{ enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 });
 }
 
 // Trajeto planejado (origem → destino) desenhado no mapa e listado abaixo.
@@ -1245,6 +1259,12 @@ function renderPremiumLock(el) {
       <span class="lock-ico">${ICON.pin}</span>
       <h2>O mapa é do Ramal Premium</h2>
       <p>Veja os trens se deslocando no mapa, a sua posição e o trajeto até o seu destino. Assinatura de <b>R$ 5 por mês</b>, que também ajuda a manter o site no ar.</p>
+      <ol class="premium-steps">
+        <li>Faça o Pix pela página de apoio (valor de R$ 5).</li>
+        <li>Mande o comprovante pelo WhatsApp (21) 97649-7605.</li>
+        <li>Receba o código de 30 dias e digite abaixo.</li>
+      </ol>
+      <a class="btn ghost" href="https://wa.me/5521976497605?text=Oi!%20J%C3%A1%20paguei%20o%20Ramal%20Premium.%20Segue%20o%20comprovante." target="_blank" rel="noopener">Já paguei: enviar comprovante</a>
       <form id="premium-form" class="premium-form" autocomplete="off">
         <label class="input"><span class="eyebrow">Código de acesso</span><input id="premium-code" placeholder="XXXX-XXXX-XXXX" maxlength="20" aria-describedby="premium-msg"></label>
         <button class="btn primary-btn" type="submit">Ativar código</button>
@@ -1288,11 +1308,14 @@ if (!store.get('welcomed', false)) {
   welcomeDlg.showModal();
 }
 // Pop-up Premium: aparece depois de 4 s em cada abertura, e de novo após fechar a boas-vindas.
+// Pop-up no máximo uma vez por dia: se a pessoa fechou hoje, não aparece de novo até amanhã.
+const todayKey = () => new Date().toDateString();
 function showPromo(delay = 4000) {
   setTimeout(() => {
-    if (!welcomeDlg.open && !isPremium() && !$('#action').open && !picker.open && !$('#promo').open) $('#promo').showModal();
+    if (!welcomeDlg.open && !isPremium() && !$('#action').open && !picker.open && !$('#promo').open && store.get('promoDay', '') !== todayKey()) $('#promo').showModal();
   }, delay);
 }
+$('#promo').addEventListener('close', () => store.set('promoDay', todayKey()));
 welcomeDlg.addEventListener('close', () => { store.set('welcomed', true); showPromo(1200); });
 $('#welcome-pick').onclick = () => {
   welcomeDlg.close();
