@@ -1190,6 +1190,17 @@ if (window.RAMAL_GOATCOUNTER) {
   document.head.appendChild(gc);
 }
 
+// ---------- Apoio voluntário ----------
+if (window.RAMAL_APOIA) { const b = $('#apoio'); b.href = window.RAMAL_APOIA; b.hidden = false; }
+if (window.RAMAL_PIX) {
+  const b = $('#pix-copy');
+  b.hidden = false;
+  b.onclick = async () => {
+    try { await navigator.clipboard.writeText(window.RAMAL_PIX); toast('Chave Pix copiada. Obrigado pelo apoio!'); }
+    catch { toast(`Chave Pix: ${window.RAMAL_PIX}`); }
+  };
+}
+
 // ---------- Atualização ----------
 
 function refreshAll() { render(); }

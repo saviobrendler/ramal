@@ -919,3 +919,7 @@ body { background: radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, 
 .foot a { color: var(--brand); text-decoration: none; font-weight: 600; }
 .foot-online { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--ok-soft); color: var(--ok) !important; font-weight: 700; font-size: 13px; }
 .foot-online::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: ring 1.6s ease-out infinite; }
+
+.apoio { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.apoio-btn { display: inline-flex; align-items: center; height: 38px; padding: 0 16px; border-radius: 999px; background: var(--brand); color: var(--brand-ink) !important; font-weight: 700; font-size: 14px; border: 0; cursor: pointer; text-decoration: none; }
+.apoio-btn.ghost { background: var(--surface-2); color: var(--ink) !important; }
