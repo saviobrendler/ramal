@@ -1116,19 +1116,45 @@ function renderMapa() {
   if (!el.dataset.ready) {
     el.dataset.ready = '1';
     el.innerHTML = `
-      <h1 class="page-title">Mapa ao vivo</h1>
-      <section class="card where" id="where" aria-live="polite"></section>
-      <div class="map-wrap"><div id="map" class="map" role="region" aria-label="Mapa dos ramais e dos trens"></div>
+      <div class="mx">
+        <div id="map" class="mx-map" role="region" aria-label="Mapa dos ramais e dos trens"></div>
+        <div class="mx-top">
+          <button class="mx-search" id="mx-to" type="button">${ICON.search}<span id="mx-to-v">Para onde você vai?</span></button>
+          <button class="mx-round" id="mx-locate" type="button" aria-label="Usar minha localização">${ICON.locate}</button>
+        </div>
         <span class="map-count" id="map-count" aria-live="polite"></span>
-        <div class="map-legend" id="map-legend"></div></div>
-      <section class="card trip-card" id="trip-card"></section>
-      <details class="map-list"><summary>Ver as estações em lista</summary>${mapListHtml()}</details>
-      <p class="fineprint">Posição dos trens estimada a partir dos horários. A operadora não publica a posição real dos trens.</p>`;
+        <div class="map-legend" id="map-legend"></div>
+        <section class="mx-sheet" aria-label="Planejar viagem">
+          <div class="sheet-grip" aria-hidden="true"></div>
+          <div class="mx-od">
+            <button class="mx-od-row" id="mx-from" type="button"><i class="od-dot"></i><span><small>De</small><b id="mx-from-v">Sua estação</b></span></button>
+            <button class="mx-od-row" id="mx-to2" type="button"><i class="od-dot end"></i><span><small>Para</small><b id="mx-to2-v">Escolha o destino</b></span></button>
+          </div>
+          <div id="where" aria-live="polite"></div>
+          <div id="trip-card"></div>
+          <details class="map-list"><summary>Ver as estações em lista</summary>${mapListHtml()}</details>
+          <p class="fineprint">Posição dos trens estimada a partir dos horários. A operadora não publica a posição real dos trens.</p>
+        </section>
+      </div>`;
+    const pickTo = () => openPicker('Para onde você vai?', n => mapSetPlan('to', n));
+    $('#mx-to').onclick = pickTo;
+    $('#mx-to2').onclick = pickTo;
+    $('#mx-from').onclick = () => openPicker('De onde você sai?', n => mapSetPlan('from', n));
+    $('#mx-locate').onclick = () => startLocate();
+    updateMapOD();
     loadGeo().then(() => { initMap(); drawMapLayers(); updateWhere(); drawTrip(); });
   } else {
     if (GEO.data) { initMap(); drawMapLayers(); updateWhere(); drawTrip(); }
   }
-  setTimeout(() => MAP.map && MAP.map.invalidateSize(), 50);
+  // Ao abrir a aba, o mapa precisa recalcular o tamanho e enquadrar a rede (ele foi criado com a aba oculta).
+  setTimeout(() => {
+    if (!MAP.map) return;
+    MAP.map.invalidateSize();
+    if (!state.plan.to && GEO.data) {
+      const pts = LINES.flatMap(l => l.stops.map(s => GEO.data[s[0]])).filter(Boolean);
+      if (pts.length) MAP.map.fitBounds(L.latLngBounds(pts), { padding: [60, 60] });
+    }
+  }, 80);
   if (!MAP.timer) MAP.timer = setInterval(() => { if (parseHash().seg === 'mapa') drawTrains(); }, 5000);
   drawTrains();
 }
@@ -1143,7 +1169,7 @@ function initMap() {
   if (MAP.map || !window.L || !$('#map')) return;
   const dark = matchMedia('(prefers-color-scheme: dark)').matches;
   MAP.map = L.map('map', { zoomControl: false, attributionControl: true }).setView([-22.86, -43.36], 11);
-  L.control.zoom({ position: 'bottomright' }).addTo(MAP.map);
+  L.control.zoom({ position: 'topright' }).addTo(MAP.map);
   // Tiles do OpenStreetMap (uso leve, com atribuição). No modo escuro, o próprio mapa recebe um filtro de cor.
   MAP.tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(MAP.map);
   if (dark) MAP.map.getContainer().classList.add('map-dark');
@@ -1265,27 +1291,47 @@ function startLocate() {
 }
 
 // Trajeto planejado (origem → destino) desenhado no mapa e listado abaixo.
+// Escolhe origem ou destino pelo mapa e atualiza a rota.
+function mapSetPlan(key, name) {
+  state.plan[key] = name;
+  store.set(key, name);
+  state.mapOpt = 0;
+  updateMapOD();
+  drawTrip();
+}
+
+function updateMapOD() {
+  const p = state.plan;
+  const set = (id, v, ph) => { const el = $(id); if (!el) return; el.textContent = v || ph; el.classList.toggle('ph', !v); };
+  set('#mx-from-v', p.from, 'Sua estação');
+  set('#mx-to2-v', p.to, 'Escolha o destino');
+  set('#mx-to-v', p.to, 'Para onde você vai?');
+}
+
+// Desenha o trajeto escolhido no mapa e lista as opções de viagem (até 3), como cartões que se tocam.
 function drawTrip() {
   const box = $('#trip-card');
   if (!box || !MAP.map) return;
   MAP.route.clearLayers();
+  updateMapOD();
   const p = state.plan;
   const from = p.from || (MAP.pos && nearestStation(MAP.pos)?.name) || null;
   if (!from || !p.to || from === p.to) {
-    box.innerHTML = `<div class="trip-empty">${ICON.route}<div><b>Escolha um destino</b><p>Na tela Rotas, defina o destino. O trajeto aparece aqui no mapa.</p></div>
-      <button class="btn ghost" type="button" data-go="#/rota">Abrir Rotas</button></div>`;
-    $('[data-go]', box)?.addEventListener('click', e => go(e.currentTarget.dataset.go));
+    box.innerHTML = `<div class="trip-empty">${ICON.route}<div><b>${!p.to ? 'Para onde você vai?' : 'Origem e destino iguais'}</b><p>${!p.to ? 'Toque em "Para onde você vai?" para ver o trajeto no mapa.' : 'Escolha estações diferentes.'}</p></div></div>`;
     return;
   }
   const now = spNow(), m = minutesOf(now), dt = dayTypeOf(now);
-  const r = plan(from, p.to, m, dt, 1)[0];
-  if (!r) { box.innerHTML = `<div class="trip-empty">${ICON.clock}<div><b>Sem trem agora</b><p>Não há viagem a partir de ${esc(from)}.</p></div></div>`; return; }
+  const results = plan(from, p.to, m, dt, 3);
+  if (!results.length) { box.innerHTML = `<div class="trip-empty">${ICON.clock}<div><b>Sem trem agora</b><p>Não há viagem a partir de ${esc(from)}.</p></div></div>`; return; }
+  const sel = Math.min(state.mapOpt || 0, results.length - 1);
+  const r = results[sel];
+
   const bounds = [];
   r.legs.forEach((leg, k) => {
     const names = leg.trip.stops.map(s => s.name);
     const i = names.indexOf(leg.from), j = names.indexOf(leg.to);
     const pts = names.slice(i, j + 1).map(n => GEO.data[n]).filter(Boolean);
-    if (pts.length > 1) L.polyline(pts, { color: leg.trip.line.color, weight: 9, opacity: .9, lineCap: 'round' }).addTo(MAP.route);
+    if (pts.length > 1) L.polyline(pts, { color: leg.trip.line.color, weight: 8, opacity: .95, lineCap: 'round', lineJoin: 'round' }).addTo(MAP.route);
     pts.forEach(pt => bounds.push(pt));
     const end = GEO.data[leg.to];
     if (k < r.legs.length - 1 && end) L.circleMarker(end, { radius: 8, color: '#fff', weight: 3, fillColor: leg.trip.line.color, fillOpacity: 1 }).bindTooltip(`Baldeação em ${leg.to}`).addTo(MAP.route);
@@ -1293,13 +1339,28 @@ function drawTrip() {
   const a = GEO.data[from], b = GEO.data[p.to];
   if (a) L.circleMarker(a, { radius: 9, color: '#fff', weight: 3, fillColor: '#1f4fe0', fillOpacity: 1 }).bindTooltip(`Saída: ${from}`).addTo(MAP.route);
   if (b) L.circleMarker(b, { radius: 9, color: '#fff', weight: 3, fillColor: '#0a7d44', fillOpacity: 1 }).bindTooltip(`Chegada: ${p.to}`).addTo(MAP.route);
-  if (bounds.length) MAP.map.fitBounds(L.latLngBounds(bounds), { padding: [36, 36], maxZoom: 13 });
+  if (bounds.length) MAP.map.fitBounds(L.latLngBounds(bounds), { padding: [40, 40], maxZoom: 13 });
 
-  box.innerHTML = `<div class="trip-head"><b>${fmt(r.dep)} → ${fmt(r.arr)}</b><span class="muted small">${dur(r.arr - r.dep)} · ${r.legs.length > 1 ? `${r.legs.length - 1} baldeação` : 'direto'}</span></div>
+  const opts = results.map((o, i) => `
+    <button class="mx-opt${i === sel ? ' on' : ''}" type="button" data-opt="${i}" aria-pressed="${i === sel}">
+      <span class="mx-opt-bar">${o.legs.map(l => `<i style="--c:${l.trip.line.color}"></i>`).join('')}</span>
+      <b>${dur(o.arr - o.dep)}</b>
+      <small>${fmt(o.dep)} · ${o.legs.length > 1 ? `${o.legs.length - 1} baldeação` : 'direto'}</small>
+    </button>`).join('');
+
+  box.innerHTML = `
+    <div class="mx-opts" role="group" aria-label="Opções de viagem">${opts}</div>
+    <div class="trip-head"><b>${fmt(r.dep)} → ${fmt(r.arr)}</b><span class="muted small">${dur(r.arr - r.dep)}</span></div>
     <ol class="trip-steps">${r.legs.map((leg, k) => `
-      ${k ? `<li class="tstep transfer"><span class="tdot"></span><div>Baldeação em <b>${esc(leg.from)}</b> · ${Math.round(leg.dep - r.legs[k - 1].arr)} min de espera</div></li>` : ''}
+      ${k ? `<li class="tstep transfer"><span class="tdot"></span><div>Troque em <b>${esc(leg.from)}</b> · ${Math.round(leg.dep - r.legs[k - 1].arr)} min de espera</div></li>` : ''}
       <li class="tstep" style="--c:${leg.trip.line.color}"><span class="tdot"></span><div>${badge(leg.trip.line)} <b>${fmt(leg.dep)}</b> ${esc(leg.from)} → <b>${fmt(leg.arr)}</b> ${esc(leg.to)}</div></li>`).join('')}
     </ol>`;
+  box.onclick = e => {
+    const o = e.target.closest('[data-opt]');
+    if (!o) return;
+    state.mapOpt = Number(o.dataset.opt);
+    drawTrip();
+  };
 }
 
 // Atualiza o trajeto quando a rota muda em outra tela.
