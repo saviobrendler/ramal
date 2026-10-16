@@ -1277,3 +1277,7 @@ h1, h2, h3 { letter-spacing: -.025em; font-weight: 760; }
 .st-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 16px; }
 .st-actions .btn { justify-content: center; height: 48px; }
 @media (max-width: 380px) { .st-actions { grid-template-columns: 1fr; } }
+
+.tipo-chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 7px; font-size: 11.5px; font-weight: 800; letter-spacing: .02em; margin-right: 6px; }
+.tipo-chip.exp { background: #fde8e8; color: #c42b1c; }
+.tipo-chip.par { background: var(--surface-2); color: var(--ink-2); }

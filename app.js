@@ -333,6 +333,14 @@ function officialLine(station, dest, dayType) {
   return rows.length ? { first: rows.map(r => r.primeiro).sort()[0], last: rows.map(r => r.ultimo).sort().slice(-1)[0] } : null;
 }
 
+// Selo de tipo do trem: só aparece quando a grade trem a trem foi importada.
+function tipoChip(trip) {
+  if (!trip || !trip.tipo) return '';
+  return trip.tipo === 'expresso'
+    ? '<span class="tipo-chip exp">Expresso</span>'
+    : '<span class="tipo-chip par">Parador</span>';
+}
+
 function statusTag(it) {
   if (it.trip.delay) return `<span class="tag late">+${it.trip.delay} min</span>`;
   if (it.trip.rt) return '<span class="tag ok">Ao vivo</span>';
@@ -816,7 +824,7 @@ function renderLinha() {
 
 // Legenda que explica a diferença entre dado real e estimativa (aparece na lista de trens).
 function legendHtml() {
-  return `<p class="est-note" role="note"><span class="est-i">i</span> Horários de partida são estimados. A operadora não publica a posição real dos trens.</p>`;
+  return `<p class="est-note" role="note"><span class="est-i">i</span> Horários de partida são estimados. A operadora não publica a posição real dos trens nem, até agora, quais viagens são expressas ou paradoras.</p>`;
 }
 
 // Evento "visita útil" no GoatCounter: uma vez por estação e por carregamento da página.
@@ -887,7 +895,7 @@ function proximosHtml(st, m, dt) {
         <div class="eta" data-eta-when="${first.eta}"><span class="when-slot">${etaWhen(first.eta, m)}</span></div>
         <div class="dep-meta">
           <span class="dep-time">${first.trip.delay ? `<s>${fmt(first.sched)}</s>` : ''}${fmt(first.eta)}</span>
-          ${delayBadge(first.trip, first.sched) || statusTag(first)}
+          ${tipoChip(first.trip)}${delayBadge(first.trip, first.sched) || statusTag(first)}
         </div>
       </div>
       ${crowd ? `<div class="dep-crowd">${crowdChip(crowd)}</div>` : ''}

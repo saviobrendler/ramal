@@ -36,10 +36,13 @@ const tripCache = {};
 
 function gtfsTrips(dayType) {
   const g = window.GTFS_DATA, byId = new Map(LINES.map(l => [l.id, l]));
-  return (g.trips[dayType] || []).map(([id, lineId, dir, dest, st]) => ({
-    id, line: byId.get(lineId), dir, dest, simDelay: 0, delay: 0, rt: false,
-    stops: st.map(([i, time]) => ({ name: g.stations[i], time })),
-  }));
+  return (g.trips[dayType] || []).map(([id, lineId, dir, dest, st]) => {
+    const line = byId.get(lineId);
+    // Tipo do trem, calculado só com a grade trem a trem: passa em todas as estações do ramal = parador; pula algumas = expresso.
+    const tipo = line && st.length < line.stops.length ? 'expresso' : 'parador';
+    return { id, line, dir, dest, tipo, simDelay: 0, delay: 0, rt: false,
+      stops: st.map(([i, time]) => ({ name: g.stations[i], time })) };
+  });
 }
 
 function tripsFor(dayType) {
