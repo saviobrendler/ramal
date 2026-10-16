@@ -1264,3 +1264,16 @@ h1, h2, h3 { letter-spacing: -.025em; font-weight: 760; }
 .mx-sheet { color: var(--ink); }
 .mx-sheet .muted, .mx-sheet small { color: var(--muted); }
 .mx-sheet .where-row b, .mx-sheet .trip-head b, .mx-sheet .tstep b { color: var(--ink); }
+
+/* Navegação em 4 abas e nota única de horários estimados */
+.tabbar { grid-template-columns: repeat(4, 1fr) !important; }
+.est-note { display: flex; gap: 10px; align-items: flex-start; margin: 2px 2px 14px; padding: 12px 14px; border-radius: 16px; background: var(--surface-2); color: var(--ink-2); font-size: 13.5px; line-height: 1.45; }
+.est-i { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 12px; font-weight: 800; display: grid; place-items: center; font-style: normal; }
+.punct-details { margin: 8px 0 18px; }
+.punct-details > summary { cursor: pointer; font-size: 18px; font-weight: 760; padding: 10px 2px; list-style: none; display: flex; justify-content: space-between; }
+.punct-details > summary::after { content: '+'; color: var(--brand); font-size: 22px; }
+.punct-details[open] > summary::after { content: '–'; }
+.punct-details > summary::-webkit-details-marker { display: none; }
+.st-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 16px; }
+.st-actions .btn { justify-content: center; height: 48px; }
+@media (max-width: 380px) { .st-actions { grid-template-columns: 1fr; } }

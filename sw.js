@@ -2,7 +2,7 @@
 // Arquivos do site: serve do cache e atualiza em segundo plano.
 // API (GET): tenta a rede; sem rede, usa a última resposta guardada.
 
-const VERSION = 'ramal-v37';
+const VERSION = 'ramal-v38';
 const SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/gtfs-data.js', '/oficial-data.js',
   '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon.svg'];
 

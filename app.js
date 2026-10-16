@@ -57,7 +57,6 @@ const SERVICE_NOTES = {
 // As cinco telas da barra. "estacao" e "linha" são detalhes: destacam a aba de onde vieram.
 const TABS = [
   { id: 'inicio', label: 'Início', icon: ICON.home, hash: '#/' },
-  { id: 'rota', label: 'Rotas', icon: ICON.route, hash: '#/rota' },
   { id: 'mapa', label: 'Mapa', icon: ICON.pin, hash: '#/mapa' },
   { id: 'linhas', label: 'Linhas', icon: ICON.lines, hash: '#/linhas' },
   { id: 'avisos', label: 'Avisos', icon: ICON.bell, hash: '#/avisos' },
@@ -113,11 +112,11 @@ function parseHash() {
   const raw = location.hash.replace(/^#\/?/, '');
   const [path, query = ''] = raw.split('?');
   const [seg, ...rest] = path.split('/');
-  return { seg: seg || 'inicio', arg: decodeURIComponent(rest.join('/') || ''), params: new URLSearchParams(query) };
+  return { seg: seg === 'rota' ? 'mapa' : (seg || 'inicio'), arg: decodeURIComponent(rest.join('/') || ''), params: new URLSearchParams(query) };
 }
 
 const VIEWS = ['inicio', 'rota', 'linhas', 'linha', 'estacao', 'avisos', 'mapa'];
-const NAV_OF = { inicio: 'inicio', rota: 'rota', linhas: 'linhas', linha: 'linhas', estacao: 'inicio', avisos: 'avisos', mapa: 'mapa' };
+const NAV_OF = { inicio: 'inicio', rota: 'mapa', linhas: 'linhas', linha: 'linhas', estacao: 'inicio', avisos: 'avisos', mapa: 'mapa' };
 let lastSeg = null;
 
 function go(hash) { location.hash = hash; }
@@ -336,9 +335,8 @@ function officialLine(station, dest, dayType) {
 
 function statusTag(it) {
   if (it.trip.delay) return `<span class="tag late">+${it.trip.delay} min</span>`;
-  if (it.trip.rt) return '<span class="tag ok">No horário</span>';
-  if (DATA_MODE === 'simulado') return '<span class="tag plain">Estimado</span>';
-  return '<span class="tag plain">Programado</span>';
+  if (it.trip.rt) return '<span class="tag ok">Ao vivo</span>';
+  return '';
 }
 
 function lineSummary(line, dt) {
@@ -416,8 +414,8 @@ function renderInicio() {
   $('#go-rota', el).onclick = () => {
     // Já abre a escolha de destino, com a sua estação atual como ponto de partida.
     if (!state.plan.from) { state.plan.from = state.station; store.set('from', state.station); }
-    go('#/rota');
-    setTimeout(() => { if (parseHash().seg === 'rota' && !state.plan.to) openPicker('Para onde você vai?', n => setOD('to', n)); }, 80);
+    go('#/mapa');
+    setTimeout(() => { if (parseHash().seg === 'mapa' && !state.plan.to) openPicker('Para onde você vai?', n => mapSetPlan('to', n)); }, 120);
   };
   $('#home-pick', el).onclick = () => openPicker('Sua estação', n => { state.station = n; store.set('station', n); remember(n); renderInicio(); });
   $('#home-fav', el).onclick = () => toggleFav(st);
@@ -818,9 +816,7 @@ function renderLinha() {
 
 // Legenda que explica a diferença entre dado real e estimativa (aparece na lista de trens).
 function legendHtml() {
-  return `<div class="legend-row" role="note">
-    <span><i class="lg-dot ok"></i>No horário: dado real</span>
-    <span><i class="lg-dot est"></i>Estimado: sem posição real do trem</span></div>`;
+  return `<p class="est-note" role="note"><span class="est-i">i</span> Horários de partida são estimados. A operadora não publica a posição real dos trens.</p>`;
 }
 
 // Evento "visita útil" no GoatCounter: uma vez por estação e por carregamento da página.
@@ -847,11 +843,17 @@ function renderEstacao() {
       </div>
       <button class="icon-btn" id="st-fav" type="button" aria-pressed="${fav}" aria-label="${fav ? 'Remover dos favoritos' : 'Salvar como favorita'}">${ICON.star}</button>
     </div>
+    <div class="st-actions">
+      <button class="btn primary-btn" id="st-goto" type="button">Ir até aqui</button>
+      <button class="btn ghost" id="st-onboard" type="button">Estou neste trem</button>
+    </div>
     <div class="subtabs" role="tablist">${tabs.map(([id, t]) => `<button type="button" role="tab" data-stab="${id}" aria-selected="${state.stTab === id}">${t}</button>`).join('')}</div>
     <div id="st-body"></div>`;
 
   $$('[data-stab]', el).forEach(b => b.onclick = () => { state.stTab = b.dataset.stab; renderEstacao(); });
   $('#st-fav', el).onclick = () => toggleFav(st);
+  $('#st-goto', el).onclick = () => { state.plan.to = st; store.set('to', st); state.mapOpt = 0; go('#/mapa'); };
+  $('#st-onboard', el).onclick = openTripPicker;
 
   const body = $('#st-body', el);
   if (state.stTab === 'proximos') { body.innerHTML = legendHtml() + proximosHtml(st, m, dt) + `<button class="report-wide" type="button" id="st-report">${ICON.megaphone}<span>Relatar um trem nesta estação</span></button>`; $('#st-report', body).onclick = () => openReportPicker(st); }
@@ -1033,11 +1035,11 @@ function renderAvisos() {
       : !COMM.overview
         ? `<div class="empty">${ICON.wifiOff}<b>Avisos indisponíveis</b>Não foi possível falar com o servidor agora.</div>`
         : `<div class="ok-state">${ICON.check}<div><b>Nenhum aviso agora</b><span>Sem paralisações ou alertas de segurança perto das estações.</span></div></div>`}</div>
-    <div class="section-head"><h2>Pontualidade por ramal</h2>
+    <details class="punct-details"><summary>Pontualidade por ramal</summary><div class="section-head">
       <div class="seg seg-sm" role="group" aria-label="Período">
         ${[7, 30, 90].map(d => `<button type="button" data-days="${d}" aria-pressed="${state.punctDays === d}">${d} dias</button>`).join('')}
       </div></div>
-    <div id="punct-list" class="punct-list"></div>
+    <div id="punct-list" class="punct-list"></div></details>
     <p class="fineprint">Calculado com os relatos “o trem passou” enviados por passageiros. Não é um dado oficial da operadora.</p>`;
   $$('[data-days]', el).forEach(b => b.onclick = () => { state.punctDays = Number(b.dataset.days); renderAvisos(); });
   fillPunctuality();
@@ -1130,8 +1132,7 @@ function renderMapa() {
             <button class="mx-od-row" id="mx-from" type="button"><i class="od-dot"></i><span><small>De</small><b id="mx-from-v">Sua estação</b></span></button>
             <button class="mx-od-row" id="mx-to2" type="button"><i class="od-dot end"></i><span><small>Para</small><b id="mx-to2-v">Escolha o destino</b></span></button>
           </div>
-          <div id="where" aria-live="polite"></div>
-          <div id="trip-card"></div>
+              <div id="trip-card"></div>
           <details class="map-list"><summary>Ver as estações em lista</summary>${mapListHtml()}</details>
           <p class="fineprint">Posição dos trens estimada a partir dos horários. A operadora não publica a posição real dos trens.</p>
         </section>
