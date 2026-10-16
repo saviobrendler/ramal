@@ -81,20 +81,16 @@ test('relatos repetidos em 10 min contam como um só', () => {
   c.close();
 });
 
-test('alerta de trem parado: exige 2 dispositivos em redes diferentes ou 3 na mesma rede', () => {
+test('alerta de trem parado: exige 3 aparelhos distintos e fica marcado como não verificado', () => {
   const c = make();
   c.add({ dev: DEV_A, type: 'parado', station: CENTRAL, line: 'japeri', dir: 1 }, { ip: IP1 });
-  assert.equal(c.stoppedAlerts().length, 0);
   c.add({ dev: DEV_B, type: 'parado', station: 'Austin', line: 'japeri', dir: 1 }, { ip: IP2 });
-  assert.equal(c.stoppedAlerts().length, 1);
+  assert.equal(c.stoppedAlerts().length, 0);
+  c.add({ dev: DEV_C, type: 'parado', station: CENTRAL, line: 'japeri', dir: 1 }, { ip: IP3 });
+  const [al] = c.stoppedAlerts();
+  assert.equal(al.kind, 'paralisacao');
+  assert.match(al.detail, /não verificado/);
   c.close();
-
-  const d = make();
-  for (const dev of [DEV_A, DEV_B]) d.add({ dev, type: 'parado', station: CENTRAL, line: 'japeri', dir: 1 }, { ip: IP1 });
-  assert.equal(d.stoppedAlerts().length, 0, 'duas pessoas na mesma rede não bastam');
-  d.add({ dev: DEV_C, type: 'parado', station: CENTRAL, line: 'japeri', dir: 1 }, { ip: IP1 });
-  assert.equal(d.stoppedAlerts().length, 1, 'três dispositivos na mesma rede bastam');
-  d.close();
 });
 
 test('alerta some depois de 30 min', () => {
@@ -124,10 +120,11 @@ test('ocultar relato o tira das estatísticas', () => {
   const c = make();
   c.add({ dev: DEV_A, type: 'parado', station: CENTRAL, line: 'japeri', dir: 1 }, { ip: IP1 });
   c.add({ dev: DEV_B, type: 'parado', station: 'Austin', line: 'japeri', dir: 1 }, { ip: IP2 });
+  c.add({ dev: DEV_C, type: 'parado', station: CENTRAL, line: 'japeri', dir: 1 }, { ip: IP3 });
   assert.equal(c.stoppedAlerts().length, 1);
-  const id = c.listRecent(10).find(r => r.dev === DEV_B).id;
+  const id = c.listRecent(10).find(r => r.type === 'parado' && r.station === 'Austin').id;
   c.hide(id);
-  assert.equal(c.stoppedAlerts().length, 0);
+  assert.equal(c.stoppedAlerts().length, 0, 'com dois aparelhos restantes, o alerta cai');
   c.close();
 });
 

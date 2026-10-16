@@ -17,7 +17,8 @@ function spNow() {
   return new Date(+p.year, +p.month - 1, +p.day, (+p.hour) % 24, +p.minute, +p.second);
 }
 const minutesOf = d => d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
-const dayTypeOf = d => (d.getDay() === 0 ? 'dom' : d.getDay() === 6 ? 'sab' : 'util');
+// Feriado usa a grade de domingo (lista em holidays.js, igual à do servidor).
+const dayTypeOf = d => RamalFeriados.dayTypeFor(d);
 
 function startTimes(s, dir, total) {
   if (s.times) return s.times.map(toMin).map(t => (dir ? t + total + 10 : t));

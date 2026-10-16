@@ -2,6 +2,19 @@
 //   Início (busca + próximos trens da sua estação) · Rotas · Linhas · Avisos
 // Telas de detalhe: Estação (Próximos, Horários, Serviços) e Linha.
 
+if (typeof HTMLDialogElement === 'function' && !HTMLDialogElement.prototype.showModal) {
+  HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
+  HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); this.dispatchEvent(new Event('close')); };
+}
+
+// Cor do texto sobre a cor de cada ramal: texto escuro em cores claras, para contraste.
+function inkFor(hex) {
+  const h = String(hex || '').replace('#', '');
+  if (h.length !== 6) return '#fff';
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.62 ? '#0c1424' : '#fff';
+}
+
 const $ = (sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -41,6 +54,7 @@ const ICON = {
   wifiOff: svg('<path d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5-2.8M19 13a10 10 0 0 0-2.4-1.8M2 8.8a15 15 0 0 1 4.3-2.6M22 8.8A15 15 0 0 0 10.7 5"/><circle cx="12" cy="20" r="1"/>'),
   swap: svg('<path d="M7 4v16m0 0-3-3m3 3 3-3M17 20V4m0 0-3 3m3-3 3 3"/>'),
   people2: svg('<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'),
+  starOn: svg('<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="currentColor"/>'),
   pin: svg('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'),
   locate: svg('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/>'),
   info: svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'),
@@ -67,7 +81,7 @@ const STATION_LINES = new Map(ALL_STATIONS.map(n => [n, LINES.filter(l => l.stop
 const linesAt = name => STATION_LINES.get(name) || [];
 const isStation = name => STATION_LINES.has(name);
 const lineById = id => LINES.find(l => l.id === id);
-const badge = line => `<span class="badge" style="--c:${line.color}">${esc(line.name)}</span>`;
+const badge = line => `<span class="badge" style="--c:${line.color};--c-ink:${inkFor(line.color)}">${esc(line.name)}</span>`;
 const dots = name => linesAt(name).map(l => `<i style="--c:${l.color}" title="${esc(l.name)}"></i>`).join('');
 const dur = m => { m = Math.round(m); return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`; };
 const inText = d => (d < 1 ? 'agora' : d < 60 ? `em ${Math.floor(d)} min` : `em ${dur(d)}`);
@@ -77,7 +91,7 @@ const ACESS = [
   { item: 'elevador', icon: ICON.elevator, name: 'Elevador', yes: 'Funcionando', no: 'Quebrado' },
   { item: 'escada', icon: ICON.stairs, name: 'Escada rolante', yes: 'Funcionando', no: 'Quebrada' },
   { item: 'rampa', icon: ICON.ramp, name: 'Rampa de acesso', yes: 'Tem', no: 'Não tem' },
-  { item: 'vao', icon: ICON.gap, name: 'Vão entre trem e plataforma', yes: 'Pequeno', no: 'Grande' },
+  { item: 'vao', icon: ICON.gap, name: 'Espaço entre trem e plataforma', yes: 'Pequeno', no: 'Grande' },
 ];
 const ALERT_KIND = {
   seguranca: { icon: ICON.shield, cls: 'danger', label: 'Segurança' },
@@ -305,7 +319,7 @@ function openReport(line, dir, station) {
   const st = station || state.station;
   openAction(`${line.name} para ${destOf(line, dir)}`, `
     <p class="action-sub">Em ${esc(st)}, agora</p>
-    <button class="action-row" type="button" data-act="passou">${ICON.check}<span><b>O trem passou agora</b><small>Ajuda a medir atrasos</small></span></button>
+    <button class="action-row" type="button" data-act="passou">${ICON.check}<span><b>O trem passou agora</b><small>Ajuda a medir a pontualidade</small></span></button>
     <div class="action-label">Como está a lotação?</div>
     <div class="crowd-pick">${[1, 2, 3, 4].map(v => `<button type="button" data-act="lot${v}">${meter(v)}<span>${CROWD_NOW[v]}</span></button>`).join('')}</div>
     <button class="action-row" type="button" data-act="parado">${ICON.stop}<span><b>Trem parado</b><small>Parado entre estações ou sem circular</small></span></button>
@@ -370,7 +384,7 @@ function alertCard(a) {
   return `<article class="alert ${k.cls}">
     <span class="alert-ico">${k.icon}</span>
     <div><b>${esc(a.title)}</b><p>${esc(a.detail || '')}</p>
-      <span class="alert-meta">${lines.map(badge).join('')}<span>${esc(a.source || '')}${a.at ? ` · ${ago(a.at)}` : ''}</span></span></div>
+      <span class="alert-meta"><span class="alert-kind">${k.label}</span>${lines.map(badge).join('')}<span>${esc(a.source || '')}${a.at ? ` · ${ago(a.at)}` : ''}</span></span></div>
   </article>`;
 }
 
@@ -397,7 +411,7 @@ function renderInicio() {
           <span class="station-name">${esc(st)}</span>
           <span class="dots">${dots(st)}</span>
         </button>
-        <button class="icon-btn" id="home-fav" type="button" aria-pressed="${fav}" aria-label="${fav ? 'Remover dos favoritos' : 'Salvar como favorita'}">${fav ? ICON.star : ICON.star}</button>
+        <button class="icon-btn" id="home-fav" type="button" aria-pressed="${fav}" aria-label="${fav ? 'Remover dos favoritos' : 'Salvar como favorita'}">${fav ? ICON.starOn : ICON.star}</button>
       </div>
       ${next.length ? `<ol class="next-list">${next.map(it => nextRow(it, m, st, dt)).join('')}</ol>`
         : `<div class="empty-inline">${ICON.clock}<span>Sem mais trens hoje nesta estação.</span></div>`}
@@ -410,7 +424,7 @@ function renderInicio() {
 
     <a class="map-teaser" href="#/mapa">
       <span class="map-teaser-ico">${ICON.pin}</span>
-      <span><b>Mapa ao vivo</b><small>Veja os trens se deslocando e onde você está</small></span>
+      <span><b>Mapa ao vivo</b><small>Trens no mapa, em posição estimada, e onde você está</small></span>
       ${ICON.chev}
     </a>
 
@@ -457,7 +471,7 @@ function tripHtml(m, dt) {
     return `<section class="trip-cta card">
       <span class="trip-ico">${ICON.route}</span>
       <div><b>Você está em um trem?</b><p>Conte o ramal e o sentido para ver as próximas paradas e quando chega ao fim da linha.</p></div>
-      <button class="btn primary-btn" id="trip-set" type="button">Estou neste trem</button></section>`;
+      <button class="btn primary-btn" id="trip-set" type="button">Marcar que estou neste trem</button></section>`;
   }
   const cand = tripsFor(dt).filter(x => x.line.id === t.line && x.dir === t.dir && x.stops.some(s => s.name === t.station));
   let best = null, bestD = Infinity;
@@ -467,7 +481,7 @@ function tripHtml(m, dt) {
     if (d < bestD) { bestD = d; best = x; }
   }
   const head = `<div class="trip-top">${badge(line)}<span>sentido <b>${esc(destOf(line, t.dir))}</b></span>
-    <button class="text-btn" id="trip-clear" type="button">Descer</button></div>`;
+    <button class="text-btn" id="trip-clear" type="button">Não estou mais neste trem</button></div>`;
   if (!best || bestD > 120) {
     return `<section class="card trip-card">${head}<p class="muted">Não encontramos esse trem agora. Ele pode já ter passado do horário.</p></section>`;
   }
@@ -492,18 +506,34 @@ function tripHtml(m, dt) {
 function notifyBar(st) {
   const on = store.get('notify', null) === st;
   return `<div class="notify-bar">
-    <span>${on ? `Avisando quando um trem chegar em <b>${esc(st)}</b>` : 'Receber aviso quando um trem estiver chegando'}</span>
+    <span>${on ? `Avisando quando um trem chegar em <b>${esc(st)}</b>` : 'Avisar quando o próximo trem chegar'}</span>
     <button class="btn ${on ? 'ghost' : 'primary-btn'} sm" id="notify-btn" type="button">${on ? 'Desligar' : 'Ativar'}</button></div>`;
 }
 
 async function toggleNotify(st) {
   if (store.get('notify', null) === st) { store.set('notify', null); toast('Aviso desligado.'); return render(); }
   if (!('Notification' in window)) return toast('Este navegador não mostra avisos. No iPhone, adicione o Ramal à Tela de Início.');
-  const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+  const perm = Notification.permission === 'granted' ? 'granted' : await askPermission();
   if (perm !== 'granted') return toast('Permissão negada. Você pode liberar nas configurações do navegador.');
   store.set('notify', st);
   toast(`Vou avisar quando um trem estiver chegando em ${st}.`);
   render();
+}
+
+// Pedido de permissão compatível com navegadores antigos (que não devolvem Promise).
+function askPermission() {
+  return new Promise(resolve => {
+    try {
+      const r = Notification.requestPermission(resolve);
+      if (r && r.then) r.then(resolve);
+    } catch { resolve('denied'); }
+  });
+}
+
+// Mostra o aviso: direto, ou pelo service worker quando o navegador não aceita o construtor (Android).
+function notifyUser(title, opts) {
+  try { new Notification(title, opts); }
+  catch { navigator.serviceWorker?.ready?.then(r => r.showNotification(title, opts)).catch(() => {}); }
 }
 
 // Verifica a cada 30 s se o próximo trem da estação com aviso está a até 3 min. Só funciona com o app aberto.
@@ -517,7 +547,7 @@ function checkNotify() {
   const key = `${st}|${next.trip.id}`;
   if (diff <= 3 && diff >= -0.5 && store.get('notified', '') !== key) {
     store.set('notified', key);
-    new Notification(`Trem chegando em ${st}`, {
+    notifyUser(`Trem chegando em ${st}`, {
       body: `${next.trip.line.name} para ${next.trip.dest} · ${diff < 1 ? 'agora' : `em ${Math.ceil(diff)} min`}`,
       icon: 'icons/icon-192.png', tag: 'ramal-chegada',
     });
@@ -674,7 +704,7 @@ function renderPlanResults() {
   }
   const fastest = results.reduce((a, b) => (b.arr - b.dep < a.arr - a.dep ? b : a));
   out.innerHTML = `<div class="results-head"><span>${results.length} opções · ${DIA_SHORT[dt]}</span></div>` +
-    results.map((r, i) => routeCard(r, i, r === results[0] ? 'Chega primeiro' : r === fastest ? 'Mais rápida' : '', today ? minutesOf(now) : null)).join('');
+    results.map((r, i) => routeCard(r, i, r === results[0] ? 'Chega mais cedo' : r === fastest ? 'Mais rápida' : '', today ? minutesOf(now) : null)).join('');
 
   const needed = [...new Set(results.flatMap(r => r.legs.flatMap(l => [l.from, l.to])))];
   Promise.all(needed.map(n => loadStation(n, dt))).then(fresh => {
@@ -852,8 +882,8 @@ function renderEstacao() {
       <button class="icon-btn" id="st-fav" type="button" aria-pressed="${fav}" aria-label="${fav ? 'Remover dos favoritos' : 'Salvar como favorita'}">${ICON.star}</button>
     </div>
     <div class="st-actions">
-      <button class="btn primary-btn" id="st-goto" type="button">Ir até aqui</button>
-      <button class="btn ghost" id="st-onboard" type="button">Estou neste trem</button>
+      <button class="btn primary-btn" id="st-goto" type="button">Como chegar aqui</button>
+      <button class="btn ghost" id="st-onboard" type="button">Marcar que estou neste trem</button>
     </div>
     <div class="subtabs" role="tablist">${tabs.map(([id, t]) => `<button type="button" role="tab" data-stab="${id}" aria-selected="${state.stTab === id}">${t}</button>`).join('')}</div>
     <div id="st-body"></div>`;
@@ -864,6 +894,12 @@ function renderEstacao() {
   $('#st-onboard', el).onclick = openTripPicker;
 
   const body = $('#st-body', el);
+  body.addEventListener('click', e => {
+    const b = e.target.closest('[data-report]');
+    if (!b) return;
+    const [l, d] = b.dataset.report.split('|');
+    openReport(lineById(l), Number(d), st);
+  });
   if (state.stTab === 'proximos') { body.innerHTML = legendHtml() + proximosHtml(st, m, dt) + `<button class="report-wide" type="button" id="st-report">${ICON.megaphone}<span>Relatar um trem nesta estação</span></button>`; $('#st-report', body).onclick = () => openReportPicker(st); }
   if (state.stTab === 'horarios') { body.innerHTML = horariosHtml(st, dt); bindHorarios(body, st); }
   if (state.stTab === 'servicos') {
@@ -928,7 +964,7 @@ function horariosHtml(st, dt) {
       <div class="seg" role="group" aria-label="Sentido">${[0, 1].map(d => `<button type="button" data-td="${d}" aria-pressed="${t.dir === d}">Para ${esc(d === 0 ? line.to : line.from)}</button>`).join('')}</div>
       <div class="seg" role="group" aria-label="Dia">${['util', 'sab', 'dom'].map(d => `<button type="button" data-tday="${d}" aria-pressed="${t.day === d}">${d === 'util' ? 'Útil' : d === 'sab' ? 'Sábado' : 'Domingo'}</button>`).join('')}</div>
     </div>`;
-  if (!times.length) return `${chips}${ctl}${head}<div class="empty">${ICON.clock}<b>Sem operação</b>Este ramal não passa aqui neste sentido e dia.</div>`;
+  if (!times.length) return `${chips}${ctl}${head}<div class="empty">${ICON.clock}<b>Sem trens neste dia e sentido</b>Este ramal não passa aqui neste sentido e dia.</div>`;
   const now = spNow(), isToday = t.day === dayTypeOf(now), mm = minutesOf(now);
   const nextT = isToday ? times.find(x => x >= mm) : undefined;
   const byHour = new Map();
@@ -978,7 +1014,7 @@ function servicosParts(st, dt) {
     const s = data?.acess?.[a.item];
     let val;
     if (s) val = `<span class="pill-status ${s.ok ? 'ok' : 'bad'}">${s.ok ? a.yes : a.no}</span><span class="muted small">${s.n} ${s.n === 1 ? 'relato' : 'relatos'} · ${ago(new Date(s.at).toISOString())}</span>`;
-    else if (a.item === 'elevador' && off) val = off.servicos.includes('Elevador') ? '<span class="pill-status ok">Tem (oficial)</span><span class="muted small">não informa se funciona</span>' : '<span class="muted">Não consta na lista oficial</span>';
+    else if (a.item === 'elevador' && off) val = off.servicos.includes('Elevador') ? '<span class="pill-status ok">Existe</span><span class="muted small">não sabemos se funciona</span>' : '<span class="muted">Não consta na lista oficial</span>';
     else if (a.item === 'escada' && off) val = '<span class="muted">Não consta na lista oficial</span>';
     else val = '<span class="muted">Sem informação</span>';
     return `<button class="row-btn" type="button" data-acess="${a.item}"><span class="row-ico">${a.icon}</span><span class="row-main">${a.name}</span><span class="row-side col">${val}</span></button>`;
@@ -1095,7 +1131,7 @@ const MAP = { map: null, lines: null, trains: null, user: null, route: null, use
 function loadGeo() {
   if (GEO.data) return Promise.resolve(GEO.data);
   if (!GEO.loading) GEO.loading = fetch('stations-geo.json', { cache: 'force-cache' })
-    .then(r => r.json()).then(j => (GEO.data = j)).catch(() => (GEO.data = {}));
+    .then(r => r.json()).then(j => (GEO.data = j)).catch(() => { GEO.loading = null; GEO.data = null; toast('Mapa indisponível agora. Use a lista de estações.'); return null; });
   return GEO.loading;
 }
 
@@ -1127,6 +1163,7 @@ function renderMapa() {
     el.dataset.ready = '1';
     el.innerHTML = `
       <div class="mx">
+        <h1 class="sr-only">Mapa dos trens</h1>
         <div id="map" class="mx-map" role="region" aria-label="Mapa dos ramais e dos trens"></div>
         <div class="mx-top">
           <button class="mx-search" id="mx-to" type="button">${ICON.search}<span id="mx-to-v">Para onde você vai?</span></button>
@@ -1151,7 +1188,7 @@ function renderMapa() {
     $('#mx-from').onclick = () => openPicker('De onde você sai?', n => mapSetPlan('from', n));
     $('#mx-locate').onclick = () => startLocate();
     updateMapOD();
-    loadGeo().then(() => { initMap(); drawMapLayers(); updateWhere(); drawTrip(); });
+    loadGeo().then(() => { if (!GEO.data) return; initMap(); drawMapLayers(); updateWhere(); drawTrip(); });
   } else {
     if (GEO.data) { initMap(); drawMapLayers(); updateWhere(); drawTrip(); }
   }
@@ -1330,7 +1367,7 @@ function drawTrip() {
   }
   const now = spNow(), m = minutesOf(now), dt = dayTypeOf(now);
   const results = plan(from, p.to, m, dt, 3);
-  if (!results.length) { box.innerHTML = `<div class="trip-empty">${ICON.clock}<div><b>Sem trem agora</b><p>Não há viagem a partir de ${esc(from)}.</p></div></div>`; return; }
+  if (!results.length) { box.innerHTML = `<div class="trip-empty">${ICON.clock}<div><b>Nenhuma viagem agora</b><p>Não há viagem a partir de ${esc(from)}.</p></div></div>`; return; }
   const sel = Math.min(state.mapOpt || 0, results.length - 1);
   const r = results[sel];
 
@@ -1347,7 +1384,8 @@ function drawTrip() {
   const a = GEO.data[from], b = GEO.data[p.to];
   if (a) L.circleMarker(a, { radius: 9, color: '#fff', weight: 3, fillColor: '#1f4fe0', fillOpacity: 1 }).bindTooltip(`Saída: ${from}`).addTo(MAP.route);
   if (b) L.circleMarker(b, { radius: 9, color: '#fff', weight: 3, fillColor: '#0a7d44', fillOpacity: 1 }).bindTooltip(`Chegada: ${p.to}`).addTo(MAP.route);
-  if (bounds.length) MAP.map.fitBounds(L.latLngBounds(bounds), { padding: [40, 40], maxZoom: 13 });
+  const fitKey = [from, p.to, sel].join('|');
+  if (bounds.length && MAP.fitKey !== fitKey) { MAP.fitKey = fitKey; MAP.map.fitBounds(L.latLngBounds(bounds), { padding: [40, 40], maxZoom: 13 }); }
 
   const opts = results.map((o, i) => `
     <button class="mx-opt${i === sel ? ' on' : ''}" type="button" data-opt="${i}" aria-pressed="${i === sel}">
@@ -1465,7 +1503,8 @@ async function pollRealtime() { await refreshRealtime(); renderStatus(); tickEta
 async function pollOverview() {
   await loadOverview(dayTypeOf(spNow()));
   if (parseHash().seg === 'avisos') await loadPunctuality(state.punctDays);
-  render();
+  renderAlertBadge();
+  if (parseHash().seg === 'avisos') renderAvisos();
 }
 
 route();
@@ -1488,14 +1527,18 @@ $('#welcome-pick').onclick = () => {
   welcomeDlg.close();
   openPicker('Sua estação', n => { state.station = n; store.set('station', n); remember(n); render(); });
 };
-setInterval(() => { const s = parseHash().seg; if (s === 'inicio' || s === 'linha' || s === 'linhas' || s === 'estacao') render(); }, 60000);
+setInterval(() => {
+  if (document.querySelector('dialog[open]')) return;
+  const s = parseHash().seg;
+  if (s === 'inicio' || s === 'linhas' || s === 'estacao') render();
+}, 60000);
 pollRealtime();
 setInterval(pollRealtime, 30000);
 pollOverview();
 setInterval(pollOverview, 60000);
 
 flushQueue();
-window.addEventListener('online', () => { toast('Conexão de volta.'); flushQueue(); pollOverview(); });
+window.addEventListener('online', () => { toast('Conexão de volta.'); pollOverview(); });
 window.addEventListener('offline', () => { toast('Sem internet: horários e rotas continuam funcionando.'); render(); });
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

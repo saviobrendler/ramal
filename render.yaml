@@ -15,3 +15,5 @@ services:
         generateValue: true
       - key: RAMAL_CORS_ORIGIN
         value: "*"
+      - key: TRUST_PROXY
+        value: "1"

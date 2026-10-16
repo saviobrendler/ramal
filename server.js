@@ -28,6 +28,13 @@ const cli = Object.fromEntries(process.argv.slice(2).filter(a => a.startsWith('-
 const env = k => cli[k] ?? process.env[k];
 
 const PORT = Number(env('PORT')) || 5173;
+// Atrás de proxy (Render), o IP real do visitante é o último da lista X-Forwarded-For. Defina TRUST_PROXY=1 nesse caso.
+const TRUST_PROXY = env('TRUST_PROXY') === '1';
+function clientIp(req) {
+  const xff = req.headers['x-forwarded-for'];
+  if (TRUST_PROXY && xff) return String(xff).split(',').pop().trim();
+  return req.socket.remoteAddress || '';
+}
 const RT = {
   url: env('RT_URL') || '',
   format: (env('RT_FORMAT') || 'gtfs-rt').toLowerCase(),
@@ -151,8 +158,7 @@ async function api(req, res, url, q) {
   }
   if (url === '/api/reports' && req.method === 'POST') {
     const body = await readBody(req);
-    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || '';
-    return sendJson(res, 201, community.add(body, { ip }));
+    return sendJson(res, 201, community.add(body, { ip: clientIp(req) }));
   }
   if (url === '/api/heartbeat' && req.method === 'POST') {
     const body = await readBody(req);
@@ -160,8 +166,7 @@ async function api(req, res, url, q) {
   }
   if (url === '/api/premium/activate' && req.method === 'POST') {
     const body = await readBody(req);
-    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || '';
-    return sendJson(res, 200, premium.activate(body.code, ip));
+    return sendJson(res, 200, premium.activate(body.code, clientIp(req)));
   }
   if (url === '/api/online') return sendJson(res, 200, { online: online.count() });
   if (url === '/api/health') return sendJson(res, 200, { ok: true, fogoCruzado: safety.fcStatus, reports: community.count() });
@@ -208,12 +213,15 @@ const types = {
   '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
   '.xml': 'application/xml', '.txt': 'text/plain',
 };
-const PUBLIC = new Set(['/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/gtfs-data.js', '/oficial-data.js', '/stations-geo.json', '/privacidade.html', '/apoio.html', '/pix.js', '/icons/train.png',
+const PUBLIC = new Set(['/index.html', '/styles.css', '/app.js', '/community.js', '/data.js', '/schedule.js', '/holidays.js', '/gtfs-data.js', '/oficial-data.js', '/stations-geo.json', '/privacidade.html', '/apoio.html', '/pix.js', '/icons/train.png',
   '/sw.js', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/maskable-512.png', '/icons/icon.svg']);
 
 http.createServer(async (req, res) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   const [rawPath, qs = ''] = req.url.split('?');
-  const url = decodeURIComponent(rawPath);
+  let url;
+  try { url = decodeURIComponent(rawPath); } catch { res.writeHead(400); return res.end('Requisição inválida'); }
 
     if (url.startsWith('/api/')) {
     // CORS: o plugin do WordPress (outro domínio) chama a API. RAMAL_CORS_ORIGIN limita a origem; padrão: qualquer uma.

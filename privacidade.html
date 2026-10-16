@@ -28,7 +28,7 @@
     <h2>Quais dados o app usa</h2>
     <ul>
       <li><b>Preferências no seu aparelho:</b> estação favorita, estações recentes, origem e destino da última rota. Ficam só no seu navegador (armazenamento local). Não são enviadas ao servidor.</li>
-      <li><b>Identificador anônimo do aparelho:</b> um código aleatório criado no seu navegador. Ele é usado para evitar relatos repetidos e para contar quantas pessoas estão usando o app agora. No servidor, ele é transformado em um resumo irreversível (hash com sal) e guardado só na memória, sem registro em disco.</li>
+      <li><b>Identificador anônimo do aparelho:</b> um código aleatório criado no seu navegador. Ele é usado para evitar relatos repetidos e para contar quantas pessoas estão usando o app agora. No servidor, ele é transformado em um resumo irreversível (hash) antes de ser guardado, e o código original nunca é armazenado. O resumo não permite identificar você. Para a contagem de pessoas online, o resumo fica só na memória e é apagado ao reiniciar o servidor.</li>
       <li><b>Relatos que você envia:</b> tipo de relato (trem passou, lotação, trem parado, ar-condicionado, vagão, acessibilidade), estação, ramal, sentido e o horário. Não pedimos nome, e-mail ou telefone. Esses relatos são guardados de forma anônima e apagados após 400 dias.</li>
       <li><b>Localização:</b> se você tocar em "Usar minha localização" no mapa, a posição é usada <b>somente no seu aparelho</b> para mostrar a estação mais próxima. Ela não é enviada ao servidor nem guardada.</li>
       <li><b>Estatísticas de visita:</b> se estiverem ativas, usam o GoatCounter, que não usa cookies e não identifica pessoas individualmente. Mostra apenas totais de visitas e páginas.</li>
@@ -48,7 +48,7 @@
       <li><b>Hospedagem:</b> o servidor do app roda na Render. Ela processa os dados para manter o serviço no ar.</li>
       <li><b>Mapas:</b> os azulejos do mapa vêm do OpenStreetMap. Essa conexão pode registrar o endereço IP, como em qualquer site.</li>
       <li><b>Estatísticas:</b> GoatCounter, se estiver ativo.</li>
-      <li><b>Apoio voluntário:</b> se você apoiar o Ramal pelo Apoia.se, os dados do pagamento são tratados pela própria plataforma, de acordo com a política dela. O Ramal não recebe nem guarda dados de cartão ou de conta bancária. Uma chave Pix, se divulgada, serve só para transferências, sem dados pessoais de quem paga.</li>
+      <li><b>Apoio voluntário:</b> se você apoiar o Ramal por Pix, o pagamento é feito pelo seu banco. O Ramal não recebe nem guarda dados de cartão ou de conta bancária, e não tem como saber quem apoiou, salvo se você nos enviar o comprovante. Uma chave Pix, se divulgada, serve só para transferências, sem dados pessoais de quem paga.</li>
     </ul>
     <p>Não vendemos dados nem os usamos para publicidade.</p>
 

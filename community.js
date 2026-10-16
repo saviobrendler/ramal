@@ -38,12 +38,12 @@ async function loadOverview(day) {
 // Carrega dados de uma estação uma vez por minuto no máximo; devolve true se trouxe algo novo.
 async function loadStation(name, day, force = false) {
   const have = COMM.stations.get(name);
-  if (!force && have && Date.now() - have.loadedAt < 60e3) return false;
+  if (!force && have && have.day === day && Date.now() - have.loadedAt < 60e3) return false;
   if (COMM.pending.has(name)) return false;
   COMM.pending.add(name);
   try {
     const j = await getJSON(`api/station?day=${day}&name=${encodeURIComponent(name)}`);
-    COMM.stations.set(name, { ...j, loadedAt: Date.now() });
+    COMM.stations.set(name, { ...j, day, loadedAt: Date.now() });
     return true;
   } catch { return false; } finally { COMM.pending.delete(name); }
 }
@@ -62,11 +62,11 @@ async function postReport(body) {
   let j = {};
   try { j = await res.json(); } catch { /* sem corpo */ }
   if (res.status >= 500) throw new Error('servidor');
-  return res.ok ? { ok: true } : { ok: false, error: j.error || 'Não foi possível enviar.' };
+  return res.ok ? { ok: true } : { ok: false, status: res.status, error: j.error || 'Não foi possível enviar.' };
 }
 
 async function sendReport(report) {
-  const body = { ...report, dev: DEV_ID };
+  const body = { ...report, dev: DEV_ID, ts: Date.now() };
   try { return await postReport(body); }
   catch { queueSet([...queueGet(), body]); return { ok: true, queued: true }; }
 }
@@ -76,7 +76,10 @@ async function flushQueue() {
   if (!q.length) return;
   const keep = [];
   for (const body of q) {
-    try { await postReport(body); } catch { keep.push(body); } // 4xx: descarta; rede: tenta depois
+    try {
+      const r = await postReport(body);
+      if (r.status === 429) keep.push(body);
+    } catch { keep.push(body); } // rede: tenta depois; outros erros: descarta
   }
   queueSet(keep);
 }

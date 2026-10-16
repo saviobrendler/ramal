@@ -13,8 +13,13 @@ const path = require('path');
 const crypto = require('crypto');
 const vm = require('vm');
 const { DatabaseSync } = require('node:sqlite');
+const { dayTypeFor } = require('../holidays');
 
 const DAY = 24 * 60 * 60 * 1000;
+// Chave para transformar o identificador do aparelho em um resumo irreversível. Defina PRIVACY_SALT no servidor
+// para manter o mesmo resumo após reinícios; sem ela, uma chave nova é gerada a cada start.
+const DEV_KEY = process.env.PRIVACY_SALT || crypto.randomBytes(32).toString('hex');
+function hashDev(d) { return crypto.createHmac('sha256', DEV_KEY).update(String(d)).digest('hex').slice(0, 32); }
 const RETENTION_DAYS = 400;
 const TYPES = new Set(['passou', 'lotacao', 'parado', 'ar', 'vagao', 'acess']);
 const ACESS_ITEMS = { elevador: 7, escada: 7, rampa: 365, vao: 365 }; // validade em dias
@@ -36,8 +41,7 @@ function loadNetwork(root) {
 
 function spParts(ts) {
   const d = new Date(new Date(ts).toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-  const dow = d.getDay();
-  return { day: dow === 0 ? 'dom' : dow === 6 ? 'sab' : 'util', minute: d.getHours() * 60 + d.getMinutes() };
+  return { day: dayTypeFor(d), minute: d.getHours() * 60 + d.getMinutes() };
 }
 
 class HttpError extends Error {
@@ -85,6 +89,7 @@ class Community {
       count: this.db.prepare('SELECT COUNT(*) AS n FROM reports'),
       list: this.db.prepare('SELECT * FROM reports ORDER BY ts DESC LIMIT ?'),
     };
+    this.migrateDevs();
     this.load();
     this.prune();
     if (startTimers) setInterval(() => this.prune(), 60 * 60e3).unref();
@@ -112,11 +117,20 @@ class Community {
 
   count() { return this.stmt.count.get().n; }
 
+  // Troca identificadores brutos antigos pelo resumo (uma vez; resumos têm 32 caracteres hexadecimais).
+  migrateDevs() {
+    const rows = this.db.prepare('SELECT DISTINCT dev FROM reports').all();
+    for (const r of rows) if (!/^[0-9a-f]{32}$/.test(r.dev)) this.db.prepare('UPDATE reports SET dev = ? WHERE dev = ?').run(hashDev(r.dev), r.dev);
+    const blk = this.db.prepare('SELECT dev FROM blocked').all();
+    for (const r of blk) if (!/^[0-9a-f]{32}$/.test(r.dev)) this.db.prepare('UPDATE blocked SET dev = ? WHERE dev = ?').run(hashDev(r.dev), r.dev);
+  }
+
   // ---------- Entrada ----------
 
   add(input, { ip }) {
-    const dev = String(input.dev || '');
-    if (!/^[a-z0-9-]{8,64}$/i.test(dev)) throw new HttpError(400, 'Dispositivo inválido');
+    const devRaw = String(input.dev || '');
+    if (!/^[a-z0-9-]{8,64}$/i.test(devRaw)) throw new HttpError(400, 'Dispositivo inválido');
+    const dev = hashDev(devRaw);
     if (this.blocked.has(dev)) throw new HttpError(403, 'Não foi possível enviar.');
     const type = String(input.type || '');
     if (!TYPES.has(type)) throw new HttpError(400, 'Tipo de relato inválido');
@@ -131,7 +145,10 @@ class Community {
     recent.push(now);
     this.rate.set(key, recent);
 
-    const r = { ts: now, dev, who, type, station, line: null, dir: null, ...spParts(now), value: null, goal: null, item: null };
+    // Relato enviado sem internet: usa o horário do envio, desde que tenha no máximo 6 horas.
+    const sent = Number(input.ts);
+    const ts = sent && now - sent >= 0 && now - sent <= 6 * 3600e3 ? sent : now;
+    const r = { ts, dev, who, type, station, line: null, dir: null, ...spParts(ts), value: null, goal: null, item: null };
 
     if (type !== 'acess') {
       const line = this.net.lines.get(String(input.line || ''));
@@ -188,16 +205,18 @@ class Community {
   }
 
   // Bloqueia um dispositivo: os relatos dele saem das estatísticas e novos envios são recusados.
-  block(dev, reason = '') {
-    this.stmt.block.run(String(dev), String(reason).slice(0, 200), this.now());
-    this.blocked.add(String(dev));
-    this.reports = this.reports.filter(x => x.dev !== String(dev));
+  block(devRaw, reason = '') {
+    const dev = hashDev(devRaw);
+    this.stmt.block.run(dev, String(reason).slice(0, 200), this.now());
+    this.blocked.add(dev);
+    this.reports = this.reports.filter(x => x.dev !== dev);
     return { ok: true };
   }
 
-  unblock(dev) {
-    this.stmt.unblock.run(String(dev));
-    this.blocked.delete(String(dev));
+  unblock(devRaw) {
+    const dev = hashDev(devRaw);
+    this.stmt.unblock.run(dev);
+    this.blocked.delete(dev);
     this.load();
     return { ok: true };
   }
@@ -274,13 +293,14 @@ class Community {
       // 2 pessoas em redes diferentes, ou 3 dispositivos na mesma rede (vários passageiros no mesmo trem
       // costumam sair pela mesma operadora de celular).
       const people = g.devs.size;
-      if (people < 2 || (g.nets.size < 2 && people < 3)) continue;
+      // Só alerta com 3 ou mais aparelhos distintos: o relato é de passageiros e não é verificado.
+      if (people < 3) continue;
       const line = this.net.lines.get(lineId);
       out.push({
         id: `parado-${lineId}`,
         kind: 'paralisacao',
         title: `Trem parado no ramal ${line ? line.name : lineId}`,
-        detail: `${people} passageiros relataram trem parado perto de ${[...g.stations].join(', ')}.`,
+        detail: `${people} pessoas informaram trem parado perto de ${[...g.stations].join(', ')}. Relato não verificado.`,
         lines: [lineId], stations: [...g.stations], at: new Date(g.at).toISOString(),
         source: 'Relatos de passageiros',
       });
@@ -353,4 +373,4 @@ function migrateJson(community, jsonFile) {
   return n;
 }
 
-module.exports = { Community, HttpError, loadNetwork, migrateJson, insertRaw };
+module.exports = { Community, HttpError, loadNetwork, migrateJson, insertRaw, hashDev };
