@@ -17,7 +17,7 @@ test('código ativa uma única vez e libera 30 dias', () => {
   const code = p.create({ days: 30, label: 'teste' });
   const r = p.activate(code, '1.1.1.1');
   assert.ok(r.expires > Date.now());
-  assert.equal(Math.round((r.expires - Date.now()) / DAY), 30);
+  assert.equal(Math.round((r.expires - Date.parse('2026-10-15T12:00:00-03:00')) / DAY), 30);
   assert.throws(() => p.activate(code, '1.1.1.1'), /já foi usado/);
 });
 

@@ -999,3 +999,33 @@ button:disabled, [aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
   .card, .dep, .route, .alert { background: var(--surface); }
   .status.live { background: var(--ok-soft); }
 }
+
+/* ================= Em qual trem estou + avisos ================= */
+.trip-cta { display: grid; grid-template-columns: 44px 1fr; gap: 12px 14px; align-items: center; margin: 14px 0; padding: 16px; background: linear-gradient(135deg, var(--brand-soft), var(--surface) 70%); }
+.trip-cta p { margin: 2px 0 0; color: var(--ink-2); font-size: 14px; }
+.trip-cta b { font-size: 16px; }
+.trip-cta .btn { grid-column: 1 / -1; justify-content: center; }
+.trip-ico { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--surface); color: var(--brand); box-shadow: var(--shadow-sm); }
+.trip-ico .ico { width: 22px; height: 22px; }
+.trip-card { margin: 14px 0; padding: 16px; border-top: 4px solid var(--c, var(--brand)); }
+.trip-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.trip-top > span { color: var(--muted); font-size: 14px; }
+.trip-top .text-btn { margin-left: auto; }
+.trip-next { display: grid; gap: 2px; margin: 14px 0 10px; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); }
+.trip-next-label { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.trip-next b { font-size: 18px; }
+.trip-next-time { font-weight: 800; color: var(--ok); font-variant-numeric: tabular-nums; }
+.trip-stops { list-style: none; margin: 0; padding: 0; }
+.trip-stops li { display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: center; padding: 7px 0; position: relative; font-size: 14.5px; }
+.trip-stops li::before { content: ""; position: absolute; left: 7px; top: -8px; bottom: -8px; width: 3px; background: var(--c, var(--brand)); border-radius: 2px; }
+.trip-stops li:first-child::before { top: 50%; }
+.trip-stops li:last-child::before { bottom: 50%; }
+.trip-stops .ts-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 3px solid var(--c, var(--brand)); box-sizing: border-box; position: relative; z-index: 1; justify-self: center; }
+.trip-stops li.now .ts-name { font-weight: 800; }
+.trip-stops li.now .ts-dot { background: var(--c, var(--brand)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c, var(--brand)) 25%, transparent); }
+.trip-stops li.passed { opacity: .45; }
+.trip-stops time { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink-2); }
+.trip-foot { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
+.notify-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 14px; padding: 12px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
+.notify-bar .btn.sm { height: 36px; padding: 0 14px; font-size: 14px; }
+.btn.sm { height: 36px; }

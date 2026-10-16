@@ -421,7 +421,105 @@ function renderInicio() {
   };
   $('#home-pick', el).onclick = () => openPicker('Sua estação', n => { state.station = n; store.set('station', n); remember(n); renderInicio(); });
   $('#home-fav', el).onclick = () => toggleFav(st);
+  $('.hero-search', el).insertAdjacentHTML('afterend', tripHtml(m, dt) + notifyBar(st));
+  $('#trip-set', el)?.addEventListener('click', openTripPicker);
+  $('#trip-clear', el)?.addEventListener('click', () => { store.set('trip', null); render(); });
+  $('#notify-btn', el)?.addEventListener('click', () => toggleNotify(st));
 }
+
+// ---------- Em qual trem estou ----------
+
+function openTripPicker() {
+  const st = state.station;
+  const opts = linesAt(st).flatMap(l => [0, 1].map(d => ({ l, d })));
+  if (!opts.length) return toast('Nenhum ramal passa aqui.');
+  openAction('Em qual trem você está?', `<p class="action-sub">Embarcou em ${esc(st)}</p>` +
+    opts.map(({ l, d }) => `<button class="action-row" type="button" data-act="${l.id}|${d}">${badge(l)}<span><b>sentido ${esc(destOf(l, d))}</b></span></button>`).join(''),
+  async act => {
+    const [id, d] = act.split('|');
+    store.set('trip', { line: id, dir: Number(d), station: st });
+    $('#action').close();
+    toast('Trem registrado. Veja as próximas paradas.');
+    render();
+  });
+}
+
+function tripHtml(m, dt) {
+  const t = store.get('trip', null);
+  const line = t && lineById(t.line);
+  if (!line) {
+    return `<section class="trip-cta card">
+      <span class="trip-ico">${ICON.route}</span>
+      <div><b>Você está em um trem?</b><p>Conte o ramal e o sentido para ver as próximas paradas e quando chega ao fim da linha.</p></div>
+      <button class="btn primary-btn" id="trip-set" type="button">Estou neste trem</button></section>`;
+  }
+  const cand = tripsFor(dt).filter(x => x.line.id === t.line && x.dir === t.dir && x.stops.some(s => s.name === t.station));
+  let best = null, bestD = Infinity;
+  for (const x of cand) {
+    const s = x.stops.find(s => s.name === t.station);
+    const d = Math.abs(s.time + x.delay - m);
+    if (d < bestD) { bestD = d; best = x; }
+  }
+  const head = `<div class="trip-top">${badge(line)}<span>sentido <b>${esc(destOf(line, t.dir))}</b></span>
+    <button class="text-btn" id="trip-clear" type="button">Descer</button></div>`;
+  if (!best || bestD > 120) {
+    return `<section class="card trip-card">${head}<p class="muted">Não encontramos esse trem agora. Ele pode já ter passado do horário.</p></section>`;
+  }
+  const idx = best.stops.findIndex(s => s.name === t.station);
+  const rows = best.stops.map((s, i) => ({ name: s.name, eta: s.time + best.delay, i })).filter(r => r.i >= idx);
+  const nextRow = rows.find(r => r.eta >= m - 0.5) || null;
+  const last = rows[rows.length - 1];
+  const stops = rows.slice(0, Math.min(rows.length, 8));
+  const nextInfo = nextRow
+    ? `<div class="trip-next"><span class="trip-next-label">Próxima parada</span><b>${esc(nextRow.name)}</b><span class="trip-next-time">${nextRow.eta - m < 1 ? 'chegando' : `em ${Math.ceil(nextRow.eta - m)} min`}</span></div>`
+    : `<div class="trip-next"><span class="trip-next-label">Viagem</span><b>Trem chegou ao fim da linha</b></div>`;
+  return `<section class="card trip-card" style="--c:${line.color}">
+    ${head}
+    ${nextInfo}
+    <ol class="trip-stops">${stops.map(r => `<li class="${nextRow && r.eta === nextRow.eta && r.name === nextRow.name ? 'now' : ''}${r.eta < m - 0.5 ? ' passed' : ''}"><span class="ts-dot"></span><span class="ts-name">${esc(r.name)}</span><time>${fmt(r.eta)}</time></li>`).join('')}</ol>
+    <p class="trip-foot">Fim da linha: ${esc(last.name)} às ${fmt(last.eta)}. Horários estimados entre as paradas.</p>
+  </section>`;
+}
+
+// ---------- Avisos de chegada ----------
+
+function notifyBar(st) {
+  const on = store.get('notify', null) === st;
+  return `<div class="notify-bar">
+    <span>${on ? `Avisando quando um trem chegar em <b>${esc(st)}</b>` : 'Receber aviso quando um trem estiver chegando'}</span>
+    <button class="btn ${on ? 'ghost' : 'primary-btn'} sm" id="notify-btn" type="button">${on ? 'Desligar' : 'Ativar'}</button></div>`;
+}
+
+async function toggleNotify(st) {
+  if (store.get('notify', null) === st) { store.set('notify', null); toast('Aviso desligado.'); return render(); }
+  if (!('Notification' in window)) return toast('Este navegador não mostra avisos. No iPhone, adicione o Ramal à Tela de Início.');
+  const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+  if (perm !== 'granted') return toast('Permissão negada. Você pode liberar nas configurações do navegador.');
+  store.set('notify', st);
+  toast(`Vou avisar quando um trem estiver chegando em ${st}.`);
+  render();
+}
+
+// Verifica a cada 30 s se o próximo trem da estação com aviso está a até 3 min. Só funciona com o app aberto.
+function checkNotify() {
+  const st = store.get('notify', null);
+  if (!st || !('Notification' in window) || Notification.permission !== 'granted') return;
+  const now = spNow(), m = minutesOf(now), dt = dayTypeOf(now);
+  const next = departures(st, m, dt, 1).flatMap(g => g.items).sort((a, b) => a.eta - b.eta)[0];
+  if (!next) return;
+  const diff = next.eta - m;
+  const key = `${st}|${next.trip.id}`;
+  if (diff <= 3 && diff >= -0.5 && store.get('notified', '') !== key) {
+    store.set('notified', key);
+    new Notification(`Trem chegando em ${st}`, {
+      body: `${next.trip.line.name} para ${next.trip.dest} · ${diff < 1 ? 'agora' : `em ${Math.ceil(diff)} min`}`,
+      icon: 'icons/icon-192.png', tag: 'ramal-chegada',
+    });
+  }
+}
+setInterval(checkNotify, 30e3);
+
+// ---------- Atualização ----------
 
 // Texto do tempo até o trem: "agora", "em 3 min" ou o horário. Atualiza sozinho (ver tickEtas).
 function etaWhen(eta, m) {
@@ -1315,7 +1413,6 @@ function showPromo(delay = 4000) {
     if (!welcomeDlg.open && !isPremium() && !$('#action').open && !picker.open && !$('#promo').open && store.get('promoDay', '') !== todayKey()) $('#promo').showModal();
   }, delay);
 }
-$('#promo').addEventListener('close', () => store.set('promoDay', todayKey()));
 welcomeDlg.addEventListener('close', () => store.set('welcomed', true));
 $('#welcome-pick').onclick = () => {
   welcomeDlg.close();
