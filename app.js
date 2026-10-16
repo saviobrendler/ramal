@@ -824,7 +824,7 @@ function renderLinha() {
 
 // Legenda que explica a diferença entre dado real e estimativa (aparece na lista de trens).
 function legendHtml() {
-  return `<p class="est-note" role="note"><span class="est-i">i</span> Horários de partida são estimados. A operadora não publica a posição real dos trens nem, até agora, quais viagens são expressas ou paradoras.</p>`;
+  return `<p class="est-note" role="note"><span class="est-i">i</span> Horários de partida são estimados. A operadora não publica a posição real dos trens. Expresso/parador é uma classificação por ramal ainda não confirmada pela operadora.</p>`;
 }
 
 // Evento "visita útil" no GoatCounter: uma vez por estação e por carregamento da página.

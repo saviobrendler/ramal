@@ -47,7 +47,7 @@ function gtfsTrips(dayType) {
 
 function tripsFor(dayType) {
   if (tripCache[dayType]) return tripCache[dayType];
-  if (DATA_MODE === 'gtfs') return (tripCache[dayType] = applyRealtime(gtfsTrips(dayType)));
+  if (DATA_MODE === 'gtfs') return (tripCache[dayType] = applyRealtime(gtfsTrips(dayType), dayType));
   const trips = [];
   for (const line of LINES) {
     const s = line.service[dayType];
@@ -68,7 +68,7 @@ function tripsFor(dayType) {
       }
     }
   }
-  return (tripCache[dayType] = applyRealtime(trips));
+  return (tripCache[dayType] = applyRealtime(trips, dayType));
 }
 
 // ---------- Tempo real ----------
@@ -77,8 +77,17 @@ function tripsFor(dayType) {
 
 const REALTIME = { active: false, source: null, updatedAt: null, delays: new Map() };
 
-function applyRealtime(trips) {
+// Classificação expresso/parador informada pelo responsável do app (não publicada pela operadora).
+// Japeri e Santa Cruz: expressos nos dias úteis. Demais ramais e todos os fins de semana: paradores.
+// Se a grade trem a trem vier com a estação de cada viagem, a classificação real (tipo já definido) prevalece.
+function tipoRule(line, dayType) {
+  if (dayType !== 'util') return 'parador';
+  return line && (line.id === 'japeri' || line.id === 'santacruz') ? 'expresso' : 'parador';
+}
+
+function applyRealtime(trips, dayType) {
   for (const t of trips) {
+    if (!t.tipo) t.tipo = tipoRule(t.line, dayType);
     const d = REALTIME.delays.get(t.id);
     t.rt = REALTIME.active && d !== undefined;
     // Sem fonte real, não há atraso: a demonstração não inventa atrasos.
