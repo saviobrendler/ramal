@@ -1172,7 +1172,6 @@ function initMap() {
   L.control.zoom({ position: 'topright' }).addTo(MAP.map);
   // Tiles do OpenStreetMap (uso leve, com atribuição). No modo escuro, o próprio mapa recebe um filtro de cor.
   MAP.tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(MAP.map);
-  if (dark) MAP.map.getContainer().classList.add('map-dark');
   MAP.lines = L.layerGroup().addTo(MAP.map);
   MAP.route = L.layerGroup().addTo(MAP.map);
   MAP.trains = L.layerGroup().addTo(MAP.map);
@@ -1452,7 +1451,8 @@ function renderPremiumLock(el) {
 // ---------- Atualização ----------
 
 function refreshAll() { render(); }
-async function pollRealtime() { await refreshRealtime(); render(); }
+// Atualiza só o que muda (dados em tempo real), sem redesenhar a tela inteira: evita piscar e perda de foco.
+async function pollRealtime() { await refreshRealtime(); renderStatus(); tickEtas(); }
 async function pollOverview() {
   await loadOverview(dayTypeOf(spNow()));
   if (parseHash().seg === 'avisos') await loadPunctuality(state.punctDays);
@@ -1479,7 +1479,7 @@ $('#welcome-pick').onclick = () => {
   welcomeDlg.close();
   openPicker('Sua estação', n => { state.station = n; store.set('station', n); remember(n); render(); });
 };
-setInterval(() => { const s = parseHash().seg; if (s === 'inicio' || s === 'linha' || s === 'linhas' || s === 'estacao') render(); }, 15000);
+setInterval(() => { const s = parseHash().seg; if (s === 'inicio' || s === 'linha' || s === 'linhas' || s === 'estacao') render(); }, 60000);
 pollRealtime();
 setInterval(pollRealtime, 30000);
 pollOverview();
